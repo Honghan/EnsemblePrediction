@@ -1,0 +1,19 @@
+{
+  "doi": "https://doi.org/10.1101/2020.03.28.20045997",
+  "id": "xie_2020",
+  "outcome": "death",
+  "model_type": "logistic_regression",
+  "model_detail": {
+    "age": 0.053,
+    "LDH": 0.004,
+    "Lymphocyte count": -1.216,
+    "SPO2": -0.109,
+    "Intercept": 5.068
+  },
+  "cohort_variable_distribution": {
+    "age": {"median": 56.0, "l25": 47.8, "h25": 67.0},
+    "LDH": {"median": 295, "l25": 216, "h25": 388},
+    "Lymphocyte count": {"median": 0.98, "l25": 0.75, "h25": 1.52},
+    "SPO2": {"median": 97, "l25": 95, "h25": 98}
+  }
+}
