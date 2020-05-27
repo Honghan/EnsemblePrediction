@@ -1,0 +1,119 @@
+{
+  "doi": "https://doi.org/10.1101/2020.03.17.20037515 ",
+  "id": "gong_2020",
+  "outcome": "poor_prognosis",
+  "model_type": "nomogram",
+  "model_detail": {
+    "unit_point_scale": [0, 100],
+    "total_point_scale": [0, 350],
+    "point-to-prediction-mappings": [
+      {"predict": 0.1, "point":  170},
+      {"predict": 0.2, "point":  190},
+      {"predict": 0.3, "point":  203},
+      {"predict": 0.4, "point":  213.8},
+      {"predict": 0.5, "point":  223.8},
+      {"predict": 0.6, "point":  233.1},
+      {"predict": 0.7, "point":  243.8},
+      {"predict": 0.8, "point":  256.5},
+      {"predict": 0.9, "point":  276.15},
+      {"predict": 0.95, "point":  293.8}
+    ],
+    "variables": {
+      "age": {"type": "discrete", "map": [
+        {
+          "range": [
+            0,
+            29
+          ],
+          "point": 0
+        },
+        {
+          "range": [
+            30,
+            39
+          ],
+          "point": 15.25
+        },
+        {
+          "range": [
+            40,
+            49
+          ],
+          "point": 31.25
+        },
+        {
+          "range": [
+            50,
+            59
+          ],
+          "point": 47
+        },
+        {
+          "range": [
+            60,
+            69
+          ],
+          "point": 62.5
+        },
+        {
+          "range": [
+            70,
+            1000
+          ],
+          "point": 77.5
+        }
+      ]},
+      "DBIL": {"type": "discrete", "map": [
+        {
+          "range": [
+            0,
+            5
+          ],
+          "point": 0
+        },
+        {
+          "range": [
+            5,
+            10
+          ],
+          "point": 12.5
+        },
+        {
+          "range": [
+            10,
+            15
+          ],
+          "point": 22.7
+        },
+        {
+          "range": [
+            15,
+            20
+          ],
+          "point": 34.5
+        },
+        {
+          "range": [
+            20,
+            1500
+          ],
+          "point": 45.3
+        }
+      ]}
+    },
+    "RDW": {"type": "continuous", "map": {"point": [0, 95], "variable": [10.5, 16]}},
+    "BUN": {"type": "continuous", "map": {"point": [0, 30], "variable": [0, 20]}},
+    "CRP": {"type": "continuous", "map": {"point": [0, 47], "variable": [0, 200]}},
+    "LDH": {"type": "continuous", "map": {"point": [0, 100], "variable": [50, 650]}},
+    "ALB": {"type": "continuous", "map": {"point": [0, 82.5], "variable": [54, 24]}}
+  },
+  "cohort_variable_distribution": {
+    "age": {"median": 45.0, "l25": 33, "h25": 62.0},
+    "LDH": {"median": 175.5, "l25": 148.5, "h25": 219.5},
+    "CRP": {"median": 5.0, "l25": 5.0, "h25": 19.5},
+    "RDW": {"median": 12.2, "l25": 11.8, "h25": 12.7},
+    "BUN": {"median": 3.9, "l25": 3.2, "h25": 4.6},
+    "ALB": {"median": 39.7, "l25": 35.1, "h25": 44.0},
+    "DBIL": {"median": 3.9, "l25": 2.7, "h25": 5.2}
+  }
+}

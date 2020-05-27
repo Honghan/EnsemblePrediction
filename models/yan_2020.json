@@ -1,0 +1,75 @@
+{
+  "doi": "https://doi.org/10.1101/2020.02.27.20028027",
+  "id": "yan_2020",
+  "outcome": "death",
+  "model_type": "decision_tree",
+  "model_detail": {
+    "nodes": [
+      {
+        "id": "root",
+        "variable": "LDH",
+        "to": {
+          "condition": {
+            "op": "less",
+            "val": 365
+          },
+          "yes": {
+            "id": "crp"
+          },
+          "no": {
+            "outcome": 1
+          }
+        }
+      },
+      {
+        "id": "crp",
+        "variable": "CRP",
+        "to": {
+          "condition": {
+            "op": "less",
+            "val": 41.2
+          },
+          "yes": {
+            "outcome": 0
+          },
+          "no": {
+            "id": "Lymphocyte"
+          }
+        }
+      },
+      {
+        "id": "Lymphocyte",
+        "variable": "Lymphocyte count",
+        "to": {
+          "condition": {
+            "op": "greater",
+            "val": 0.90
+          },
+          "yes": {
+            "outcome": 0
+          },
+          "no": {
+            "outcome": 1
+          }
+        }
+      }
+    ]
+  },
+  "cohort_variable_distribution": {
+    "CRP": {
+      "median": 25.80,
+      "l25": 1.98,
+      "h25": 98.08
+    },
+    "LDH": {
+      "median": 268.50,
+      "l25": 196.00,
+      "h25": 365.25
+    },
+    "Lymphocyte(%)": {
+      "median": 14.35,
+      "l25": 4.13,
+      "h25": 27.58
+    }
+  }
+}

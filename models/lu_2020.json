@@ -1,0 +1,12 @@
+{
+  "doi": "https://dx.doi.org/10.2139/ssrn.3543603",
+  "id": "lu_2020",
+  "outcome": "death",
+  "model_type": "scoring",
+  "model_detail": {
+    "age": {"op": "greatereq", "val": 60, "yes": 1, "no":  0},
+    "CRP": {"op": "greatereq", "val": 34, "yes": 1, "no":  0}
+  },
+  "cohort_variable_distribution": {
+  }
+}
