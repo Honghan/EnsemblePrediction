@@ -1,10 +1,5 @@
-import utils
-from models import LogisticRegression, DistributionImputator, DecisionTree, ScoringModel, NomogramModel
 import pandas as pd
-import data_utils as du
 import matplotlib.pyplot as plt
-import model_ensemble as me
-import numpy as np
 
 
 def auc_roc_analysis(y, predicted_probs, gen_fig=True, fig_title=None, output_file=None):
@@ -65,23 +60,15 @@ def clinical_usefulness(y, predicted):
 
 
 def evaluate_pipeline(y, predicted_probs, model_name=None, threshold=0.5, figs=False):
-    result = {}
-    # 1. auc_roc_analysis
-    result['c-index'] = auc_roc_analysis(y, predicted_probs,
-                                         gen_fig=figs,
-                                         fig_title='ROC curve' +
-                                                   (' of ' + model_name if model_name is not None else ''))
-
-    # 2. carlibration_analysis
-    result['calibration'] = carlibration_analysis(y, predicted_probs,
-                                                  gen_fig=figs,
-                                                  fig_title='calibration plot' +
-                                                            (' of ' + model_name if model_name is not None else ''))
-
-    # 3. clinical_usefulness
-    result['clinical_usefulness'] = clinical_usefulness(y, [(1 if p >= threshold else 0) for p in predicted_probs])
-
-    return result
+    return {'c-index': auc_roc_analysis(y, predicted_probs,
+                                        gen_fig=figs,
+                                        fig_title='ROC curve' +
+                                                  (' of ' + model_name if model_name is not None else '')),
+            'calibration': carlibration_analysis(y, predicted_probs,
+                                                 gen_fig=figs,
+                                                 fig_title='calibration plot' +
+                                                           (' of ' + model_name if model_name is not None else '')),
+            'clinical_usefulness': clinical_usefulness(y, [(1 if p >= threshold else 0) for p in predicted_probs])}
 
 
 def format_result(model2result):

@@ -69,7 +69,7 @@ class BasicEnsembler(Esembler):
         else:
             return BasicEnsembler.one_vote(preds, positive=False)
 
-    def predict_probs(self,x):
+    def predict_probs(self, x):
         """
         score
         :param x:
