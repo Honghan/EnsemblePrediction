@@ -15,7 +15,7 @@ def PaO2_to_SpO2(pO2):
 
 def read_data(data_file, sep='\t', column_mapping=None, partial_to_saturation_col=None):
     x = pd.read_csv(data_file, sep=sep)
-    if PaO2_to_SpO2 is not None:
+    if partial_to_saturation_col is not None:
         x[partial_to_saturation_col] = [PaO2_to_SpO2(v) for v in x[partial_to_saturation_col]]
     if column_mapping is not None:
         x.rename(columns=column_mapping, inplace=True)

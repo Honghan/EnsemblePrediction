@@ -270,6 +270,9 @@ class ScoringModel(PredictionModel):
 
 
 class NomogramModel(PredictionModel):
+    """
+    Nmogram prediction - essentially a sequence of linear functions
+    """
     def __init__(self, model_data):
         self._params = {}
         self._unit_point_scale = [0, 100]
@@ -303,7 +306,7 @@ class NomogramModel(PredictionModel):
                 matched = False
                 last_point = 0
                 for t in cal['map']:
-                    if t['range'][0] <= val < t['range'][1]:
+                    if t['range'][0] <= val <= t['range'][1]:
                         points += t['point']
                         matched = True
                         break

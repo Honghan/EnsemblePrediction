@@ -53,8 +53,12 @@ def carlibration_analysis(y, predicted_probs, gen_fig=True, fig_title=None, outp
 def clinical_usefulness(y, predicted):
     from sklearn.metrics import confusion_matrix
     tn, fp, fn, tp = confusion_matrix(y, predicted).ravel()
-    return {'ppv': 1.0 * tp / (tp + fp),
-            'sensitivity': 1.0 * tp / (tp + fn),
+    ppv = 1.0 * tp / (tp + fp)
+    sensitivity = 1.0 * tp / (tp + fn)
+    f1 = 2 * ppv * sensitivity / (ppv + sensitivity)
+    return {'ppv': ppv,
+            'sensitivity': sensitivity,
+            'f1-score': f1,
             'specificity': 1.0 * tn / (tn + fp),
             'npv': 1.0 * tn / (tn + fn)}
 

@@ -10,7 +10,10 @@ class VoteMode(Enum):
     max_score = 5
 
 
-class Esembler(object):
+class Ensembler(object):
+    """
+    the abstract class for ensemble learning
+    """
     def __init__(self):
         self._models = []
         self._model2weights = {}
@@ -18,6 +21,11 @@ class Esembler(object):
     def add_model(self, prediction_model, weight=1):
         self._models.append(prediction_model)
         self._model2weights[prediction_model.id] = weight
+
+    def adjust_severity_weight(self, outcome_severity, severity_conf):
+        for m in self._models:
+            self._model2weights[m.id] = severity_conf[m.outcome] / outcome_severity * self._model2weights[m.id]
+            print('weight->', m.id, self._model2weights[m.id])
 
     def predict(self, x):
         models.PredictionModel.check_x(x)
@@ -35,7 +43,7 @@ class Esembler(object):
         return self._models
 
 
-class BasicEnsembler(Esembler):
+class BasicEnsembler(Ensembler):
     def __init__(self):
         self._mode = VoteMode.one_vote_positive
         super(BasicEnsembler, self).__init__()
