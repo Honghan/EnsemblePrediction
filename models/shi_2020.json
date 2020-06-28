@@ -6,8 +6,8 @@
   "model_detail": {
     "variables": {
       "age": {"op": "greatereq", "val": 50, "yes": 1, "no":  0},
-      "male": {"op": "eq", "val": 1, "yes": 1, "no":  0},
-      "hypertension": {"op": "eq", "val": 1, "yes": 1, "no":  0}
+      "Male": {"op": "eq", "val": 1, "yes": 1, "no":  0},
+      "morbidity_Hypertension": {"op": "eq", "val": 1, "yes": 1, "no":  0}
     },
     "score_probs": [
       [0, 0.083],
