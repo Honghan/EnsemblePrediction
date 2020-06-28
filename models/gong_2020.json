@@ -63,7 +63,7 @@
           "point": 77.5
         }
       ]},
-      "DBIL": {"type": "discrete", "map": [
+      "Direct bilirubin": {"type": "discrete", "map": [
         {
           "range": [
             0,
@@ -101,19 +101,31 @@
         }
       ]}
     },
-    "RDW": {"type": "continuous", "map": {"point": [0, 95], "variable": [10.5, 16]}},
-    "BUN": {"type": "continuous", "map": {"point": [0, 30], "variable": [0, 20]}},
-    "CRP": {"type": "continuous", "map": {"point": [0, 47], "variable": [0, 200]}},
-    "LDH": {"type": "continuous", "map": {"point": [0, 100], "variable": [50, 650]}},
-    "ALB": {"type": "continuous", "map": {"point": [0, 82.5], "variable": [54, 24]}}
+    "Red cell distribution width": {"type": "continuous", "map": {"point": [0, 95], "variable": [10.5, 16]}},
+    "Serum blood urea nitrogen": {"type": "continuous", "map": {"point": [0, 30], "variable": [0, 20]}},
+    "C-reactive protein": {"type": "continuous", "map": {"point": [0, 47], "variable": [0, 200]}},
+    "Lactate dehydrogenase": {"type": "continuous", "map": {"point": [0, 100], "variable": [50, 650]}},
+    "Albumin": {"type": "continuous", "map": {"point": [0, 82.5], "variable": [54, 24]}}
   },
   "cohort_variable_distribution": {
     "age": {"median": 45.0, "l25": 33, "h25": 62.0},
-    "LDH": {"median": 175.5, "l25": 148.5, "h25": 219.5},
-    "CRP": {"median": 5.0, "l25": 5.0, "h25": 19.5},
-    "RDW": {"median": 12.2, "l25": 11.8, "h25": 12.7},
-    "BUN": {"median": 3.9, "l25": 3.2, "h25": 4.6},
-    "ALB": {"median": 39.7, "l25": 35.1, "h25": 44.0},
-    "DBIL": {"median": 3.9, "l25": 2.7, "h25": 5.2}
+    "Lactate dehydrogenase": {"median": 175.5, "l25": 148.5, "h25": 219.5},
+    "C-reactive protein": {"median": 5.0, "l25": 5.0, "h25": 19.5},
+    "Red cell distribution width": {"median": 12.2, "l25": 11.8, "h25": 12.7},
+    "Serum blood urea nitrogen": {"median": 3.9, "l25": 3.2, "h25": 4.6},
+    "Albumin": {"median": 39.7, "l25": 35.1, "h25": 44.0},
+    "Direct bilirubin": {"median": 3.9, "l25": 2.7, "h25": 5.2}
+  },
+  "provenance":{
+    "region": ["Wuhan", "Guangzhou"],
+    "Country": "China",
+    "derivation_cohort": {
+      "N": 189,
+      "follow_start": "2020-01-20",
+      "follow_end": "2020-03-02",
+      "severity_count": 28,
+      "age": {"median": 49, "l25":  35, "h25": 63},
+      "male": 88
+    }
   }
 }

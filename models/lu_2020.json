@@ -4,9 +4,30 @@
   "outcome": "death",
   "model_type": "scoring",
   "model_detail": {
-    "age": {"op": "greatereq", "val": 60, "yes": 1, "no":  0},
-    "CRP": {"op": "greatereq", "val": 34, "yes": 1, "no":  0}
+    "variables": {
+      "age": {"op": "greatereq", "val": 60, "yes": 1, "no":  0},
+      "C-reactive protein": {"op": "greatereq", "val": 34, "yes": 1, "no":  0}
+    },
+    "score_probs": [
+      [0, 0.0],
+      [1, 0.06],
+      [2, 0.33]
+    ]
   },
   "cohort_variable_distribution": {
+    "C-reactive protein": {"median": 25.7, "l25": 8.5, "h25": 36.6}
+  },
+  "provenance":{
+    "region": "Wuhan",
+    "Country": "China",
+    "derivation_cohort": {
+      "N": 577,
+      "follow_start": "2020-01-21",
+      "follow_end": "2020-02-05",
+      "death_count": 39,
+      "severe_count": 100,
+      "age": {"median": 55, "l25":  39, "h25": 66},
+      "male": 254
+    }
   }
 }

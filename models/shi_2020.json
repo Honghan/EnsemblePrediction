@@ -4,10 +4,30 @@
   "outcome": "poor_prognosis",
   "model_type": "scoring",
   "model_detail": {
-    "age": {"op": "greatereq", "val": 50, "yes": 1, "no":  0},
-    "male": {"op": "eq", "val": 1, "yes": 1, "no":  0},
-    "hypertension": {"op": "eq", "val": 1, "yes": 1, "no":  0}
+    "variables": {
+      "age": {"op": "greatereq", "val": 50, "yes": 1, "no":  0},
+      "male": {"op": "eq", "val": 1, "yes": 1, "no":  0},
+      "hypertension": {"op": "eq", "val": 1, "yes": 1, "no":  0}
+    },
+    "score_probs": [
+      [0, 0.083],
+      [1, 0.138],
+      [2, 0.389],
+      [3, 0.429]
+    ]
   },
   "cohort_variable_distribution": {
+  },
+  "provenance":{
+    "region": "Zhejiang",
+    "Country": "China",
+    "derivation_cohort": {
+      "N": 487,
+      "follow_start": "",
+      "follow_end": "2020-02-17",
+      "severe_count": 49,
+      "age": {"median": 46, "l25":  27, "h25": 65},
+      "male": 259
+    }
   }
 }

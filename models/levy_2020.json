@@ -1,0 +1,151 @@
+{
+  "doi": "https://doi.org/10.1101/2020.04.22.20075416",
+  "id": "levy_2020",
+  "outcome": "death",
+  "model_type": "NOCOS",
+  "model_detail": {
+    "calculationData": {
+      "methodName": "covid19SurvivalProbabilityFormula_v4",
+      "bayesData": {
+        "k1": "-0.0564154614797237",
+        "mu1": "-0.76732823917242",
+        "sigma1": "0.340233278444299",
+        "k2": "-0.00748866239263715",
+        "mu2": "-0.258464583976991",
+        "sigma2": "0.450602964153023",
+        "PCsurvived": "0.744289437375441"
+      },
+      "paretoData": {
+        "priorPos": 0.766167825,
+        "priorNeg": 0.233832175,
+        "posteriorPos": {
+          "k1": 0.074013288,
+          "sigma1": 0.187123532,
+          "threshold1": 0.755071161,
+          "p1": 0.3,
+          "coefficients": [
+            133.43,
+            -625.83,
+            1081.2,
+            -805.83,
+            218.77
+          ],
+          "k2": -0.149594855,
+          "sigma2": 0.090966648,
+          "threshold2": 1.054899486,
+          "p2": 0.85
+        },
+        "posteriorNeg": {
+          "k1": -0.200130035,
+          "sigma1": 0.459675754,
+          "threshold1": 0.189556643,
+          "p1": 0.3,
+          "coefficients": [
+            0.70882,
+            -1.5623,
+            14.884,
+            -25.675,
+            11.613
+          ],
+          "k2": -0.133399388,
+          "sigma2": 0.119996824,
+          "threshold2": 0.720966405,
+          "p2": 0.85
+        }
+      },
+      "predictorData": [
+        {
+          "id": "Coefficient0",
+          "sigma": 1.0,
+          "mu": -1.0,
+          "coefficient": 0.716001298
+        },
+        {
+          "id": "Serum blood urea nitrogen",
+          "sigma": 24.57408505,
+          "mu": 25.81933257,
+          "coefficient": -0.165746641
+        },
+        {
+          "id": "age",
+          "sigma": 16.10149918,
+          "mu": 64.89078221,
+          "coefficient": -0.102542519
+        },
+        {
+          "id": "Red cell distribution width",
+          "sigma": 1.86099237,
+          "mu": 14.01257162,
+          "coefficient": -0.069283309
+        },
+        {
+          "id": "Neutrophil count",
+          "sigma": 4.225100867,
+          "mu": 6.41331726,
+          "coefficient": -0.092572642
+        },
+        {
+          "id": "Oxygen saturation",
+          "sigma": 4.255712552,
+          "mu": 94.94204545,
+          "coefficient": 0.092246071
+        },
+        {
+          "id": "Serum sodium",
+          "sigma": 5.951644663,
+          "mu": 137.9635108,
+          "coefficient": -0.053596171
+        }
+      ]
+    }
+  },
+  "cohort_variable_distribution": {
+    "age": {
+      "median": 65.0,
+      "l25": 54.8,
+      "h25": 77.0
+    },
+    "Serum blood urea nitrogen": {
+      "median": 18.0,
+      "l25": 12.0,
+      "h25": 31.0
+    },
+    "Neutrophil count": {
+      "median": 5.82,
+      "l25": 4.07,
+      "h25": 8.37
+    },
+    "Serum sodium": {
+      "median": 136.0,
+      "l25": 133.0,
+      "h25": 139.0
+    },
+    "Oxygen saturation": {
+      "median": 96.0,
+      "l25": 94.0,
+      "h25": 98.0
+    },
+    "Red cell distribution width": {
+      "median": 13.0,
+      "l25": 12.80,
+      "h25": 14.60
+    }
+  },
+  "provenance": {
+    "region": "New York",
+    "Country": "U.S.",
+    "derivation_cohort": {
+      "N": 11095,
+      "follow_start": "2020-03-01",
+      "follow_end": "2020-05-05",
+      "death_count": 2596,
+      "outcome_window_in_days": 7,
+      "age": {
+        "median": 65,
+        "l25": 54,
+        "h25": 77
+      },
+      "male": 144
+    }
+  }
+}

@@ -4,10 +4,11 @@
   "outcome": "death",
   "model_type": "decision_tree",
   "model_detail": {
+    "event_rate": 0.464,
     "nodes": [
       {
         "id": "root",
-        "variable": "LDH",
+        "variable": "Lactate dehydrogenase",
         "to": {
           "condition": {
             "op": "less",
@@ -17,20 +18,28 @@
             "id": "crp"
           },
           "no": {
-            "outcome": 1
+            "outcome": 1,
+            "support": {
+              "T": 146,
+              "F": 3
+            }
           }
         }
       },
       {
         "id": "crp",
-        "variable": "CRP",
+        "variable": "C-reactive protein",
         "to": {
           "condition": {
             "op": "less",
             "val": 41.2
           },
           "yes": {
-            "outcome": 0
+            "outcome": 0,
+            "support": {
+              "T": 177,
+              "F": 0
+            }
           },
           "no": {
             "id": "Lymphocyte"
@@ -46,22 +55,30 @@
             "val": 0.90
           },
           "yes": {
-            "outcome": 0
+            "outcome": 0,
+            "support": {
+              "T": 9,
+              "F": 3
+            }
           },
           "no": {
-            "outcome": 1
+            "outcome": 1,
+            "support": {
+              "T": 11,
+              "F": 2
+            }
           }
         }
       }
     ]
   },
   "cohort_variable_distribution": {
-    "CRP": {
+    "C-reactive protein": {
       "median": 25.80,
       "l25": 1.98,
       "h25": 98.08
     },
-    "LDH": {
+    "Lactate dehydrogenase": {
       "median": 268.50,
       "l25": 196.00,
       "h25": 365.25
@@ -70,6 +87,18 @@
       "median": 14.35,
       "l25": 4.13,
       "h25": 27.58
+    }
+  },
+  "provenance":{
+    "region": "Wuhan",
+    "Country": "China",
+    "derivation_cohort": {
+      "N": 375,
+      "follow_start": "2020-01-10",
+      "follow_end": "2020-02-18",
+      "death_count": 155,
+      "age": {"median": 59, "l25":  42, "h25": 75},
+      "male": 174
     }
   }
 }
