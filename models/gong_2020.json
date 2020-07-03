@@ -123,7 +123,7 @@
       "N": 189,
       "follow_start": "2020-01-20",
       "follow_end": "2020-03-02",
-      "severity_count": 28,
+      "severe_count": 28,
       "age": {"median": 49, "l25":  35, "h25": 63},
       "male": 88
     }

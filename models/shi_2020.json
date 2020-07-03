@@ -17,6 +17,9 @@
     ]
   },
   "cohort_variable_distribution": {
+    "morbidity_Hypertension": {"type": "binary"},
+    "Male": {"type": "binary"},
+    "age": {"median": 46, "l25":  27, "h25": 65}
   },
   "provenance":{
     "region": "Zhejiang",

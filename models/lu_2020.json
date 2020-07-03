@@ -15,6 +15,7 @@
     ]
   },
   "cohort_variable_distribution": {
+    "age": {"median": 55, "l25": 39, "h25": 66},
     "C-reactive protein": {"median": 25.7, "l25": 8.5, "h25": 36.6}
   },
   "provenance":{
