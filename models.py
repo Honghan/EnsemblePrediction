@@ -436,20 +436,26 @@ class DistributionImputator(Imputator):
         super().__init__()
         self._dist = dist
 
-    def impute(self, x, variables):
-        if not isinstance(x, pd.DataFrame):
+    def impute(self, x_orig, variables):
+        if not isinstance(x_orig, pd.DataFrame):
             raise Exception('the parameter x needs to be a pandas DataFrame instance')
+        x = x_orig.copy()
+        ignore_impute_vars = []
         for v in variables:
             if v not in x.columns:
                 if v not in self._dist:
                     raise Exception('{0} does not have a distribution data'.format(v))
                 d = self._dist[v]
+                if 'type' in d and d['type'] == 'binary':
+                    # don't do binary, they are put in for collecting model variable purpose only
+                    ignore_impute_vars.append(v)
+                    continue
                 if 'median' not in d:
                     raise Exception('only continuous variable imputations supported [{0}]'.format(d))
                 x.loc[:, v] = [DistributionImputator.iqr_random_value(d['median'], d['l25'], d['h25'])
                                for idx in range(0, x.shape[0])]
         na_cols = x.columns[x.isna().any()].tolist()
-        to_impute_cols = [v for v in variables if v in na_cols]
+        to_impute_cols = [v for v in variables if v in na_cols and v not in ignore_impute_vars]
         if len(to_impute_cols) > 0:
             for idx, r in x.iterrows():
                 for c in to_impute_cols:

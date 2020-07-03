@@ -7,6 +7,7 @@ import model_evaluate as eval
 import logging
 from os import listdir
 from os.path import isfile, join
+import pandas as pd
 
 
 def load_model(json_file):
@@ -43,7 +44,7 @@ def test_ensemble(model, x, outcome='death', threshold=0.5, severity_conf=None, 
     y = x[outcome].to_list()
     if severity_conf is not None:
         model.adjust_severity_weight(severity_conf[outcome], severity_conf)
-    if model.mode in [me.VoteMode.average_score, me.VoteMode.max_score]:
+    if model.mode in [me.VoteMode.average_score, me.VoteMode.max_score, me.VoteMode.competence_by_age]:
         probs = model.predict_probs(x)
         result = eval.evaluate_pipeline(y, probs, model_name='ensemble model', threshold=threshold, figs=generate_figs)
         return result
@@ -96,7 +97,7 @@ def test_models_and_ensemble(model_files, x, weights=None, outcome='death', thre
         ve.add_model(m, 1 if weights is None else weights[idx])
         results['{0}\n({1})'.format(m.id, m.model_type)] = result
 
-    ve.mode = me.VoteMode.average_score
+    ve.mode = me.VoteMode.competence_by_age
     result = test_ensemble(ve, x, threshold=threshold, outcome=outcome, severity_conf=severity_conf,
                            generate_figs=generate_figs)
     results['ensemble model'] = result
@@ -139,7 +140,7 @@ def do_test(config_file):
         result_file = '{0}/{1}_result.tsv'.format(config['result_tsv_folder'], outcome)
         test_models_and_ensemble(model_files,
                                  x,
-                                 weights=None,  # config['weights'][outcome],
+                                 weights=config['weights'][outcome] if 'weights' in config else None,
                                  outcome=outcome,
                                  threshold=config['threshold'],
                                  result_csv=result_file,
@@ -149,17 +150,62 @@ def do_test(config_file):
         logging.info('result saved to {0}'.format(result_file))
 
 
-def get_all_variables_from_models(model_folder):
+def get_all_variables_from_models(model_folder, conf):
     files = [join(model_folder, f) for f in listdir(model_folder) if isfile(join(model_folder, f))]
     vars = set()
+    models = []
     for f in files:
         m = load_model(f)
+        models.append(m)
         for v in m.model_data['cohort_variable_distribution']:
             vars.add(v)
     print(vars)
+    summarise_models(models, conf)
+
+
+def summarise_models(models, conf):
+    data = {'model': ['outcome', 'model type',
+                      'derivation cohort',
+                      'country', 'region',
+                      'N', 'age', 'followup period', 'death ratio', 'poor prognosis ratio',
+                      'Model features']}
+    for sect in conf['sections']:
+        data['model'].append(sect['section'])
+        for v in sect['variables']:
+            data['model'].append('  %s' % v)
+    for m in models:
+        cohort = m.model_data['provenance']['derivation_cohort']
+        data[m.id] = [
+            m.outcome,
+            m.model_type,
+            ' ',
+            m.model_data['provenance']['Country'],
+            m.model_data['provenance']['region'],
+            cohort['N'],
+            '%s [%s-%s]' % (cohort['age']['median'],
+                            cohort['age']['l25'],
+                            cohort['age']['h25']),
+            '%s to %s' % (cohort['follow_start'],
+                       cohort['follow_end']),
+            '-' if 'death_count' not in cohort else
+            '{:.2%}'.format(cohort['death_count'] / cohort['N']),
+            '-' if 'severe_count' not in cohort else
+            '{:.2%}'.format(cohort['severe_count'] / cohort['N']),
+        ]
+        data[m.id].append(' ')  # empty line for model features
+        for sect in conf['sections']:
+            data[m.id].append(' ')
+            for v in sect['variables']:
+                if v in m.model_data['cohort_variable_distribution']:
+                    data[m.id].append('x')
+                else:
+                    data[m.id].append(' ')
+    df = pd.DataFrame(data)
+    df.to_csv(conf['output_file'], index=False, sep='\t')
+    logging.info('saved to %s' % conf['output_file'])
 
 
 if __name__ == "__main__":
     utils.setup_basic_logging(log_level='INFO', file='ensemble.log')
     do_test('./test/test_config.json')
-    # get_all_variables_from_models('./models')
+    # get_all_variables_from_models('./models', utils.load_json_data('./test/model_sum_conf.json'))

@@ -8,6 +8,7 @@ class VoteMode(Enum):
     one_vote_negative = 3
     average_score = 4
     max_score = 5
+    competence_by_age = 6
 
 
 class Ensembler(object):
@@ -46,6 +47,7 @@ class Ensembler(object):
 class BasicEnsembler(Ensembler):
     def __init__(self):
         self._mode = VoteMode.one_vote_positive
+        self._competence_assessor = None
         super(BasicEnsembler, self).__init__()
 
     @property
@@ -55,6 +57,11 @@ class BasicEnsembler(Ensembler):
     @mode.setter
     def mode(self, v):
         self._mode = v
+
+    def get_competence(self):
+        if self._competence_assessor is None:
+            self._competence_assessor = AgeBasedAssessor(self.models)
+        return self._competence_assessor
 
     def predict(self, x, threshold=0.5):
         preds = []
@@ -74,6 +81,9 @@ class BasicEnsembler(Ensembler):
             return BasicEnsembler.score_fuse(preds, threshold=threshold)
         elif self.mode == VoteMode.max_score:
             return BasicEnsembler.score_fuse(preds, max_fuse=True, threshold=threshold)
+        elif self.mode == VoteMode.competence_by_age:
+            return BasicEnsembler.score_fuse_by_competence(x, preds, self.models,
+                                                           self.get_competence(), threshold=threshold)
         else:
             return BasicEnsembler.one_vote(preds, positive=False)
 
@@ -83,7 +93,7 @@ class BasicEnsembler(Ensembler):
         :param x:
         :return:
         """
-        if self.mode not in [VoteMode.average_score, VoteMode.max_score]:
+        if self.mode not in [VoteMode.average_score, VoteMode.max_score, VoteMode.competence_by_age]:
             raise Exception('only average_score/max_score modes can predict probs')
         preds = []
         weights = []
@@ -94,6 +104,11 @@ class BasicEnsembler(Ensembler):
             preds.append(m.predict_prob(imputed_x))
             weights.append(self.model2weight[m.id])
         use_max = self.mode == VoteMode.max_score
+        if self.mode == VoteMode.competence_by_age:
+            return BasicEnsembler.score_fuse_by_competence(x, preds, self.models,
+                                                           self.get_competence(),
+                                                           weight_by_competence=True,
+                                                           default_weights=weights)
         return BasicEnsembler.score_fuse(preds, max_fuse=use_max, use_score=True, weights=weights)
 
     @staticmethod
@@ -167,3 +182,75 @@ class BasicEnsembler(Ensembler):
                 else:
                     fused.append(0)
         return fused
+
+    @staticmethod
+    def score_fuse_by_competence(X, preds, models, competence_assessor, threshold=None,
+                                 weight_by_competence=False, default_weights=None):
+        new_preds = []
+        for idx, r in X.iterrows():
+            competence_list = [(i, competence_assessor.evaluate(models[i], r)) for i in range(len(models))]
+            competence_list = sorted(competence_list, key=lambda cl: -cl[1])
+            if weight_by_competence:
+                new_preds.append(BasicEnsembler.competence_weighted_fuse(preds, idx, competence_list,
+                                                                         default_weights, threshold=threshold))
+            else:
+                new_preds.append(BasicEnsembler.select_most_competence(preds, idx, competence_list,
+                                                                       competence_assessor,
+                                                                       threshold=threshold))
+        return new_preds
+
+    @staticmethod
+    def competence_weighted_fuse(preds, index, competence_list, default_weights, threshold=None):
+        use_default = True if competence_list[0][1] == 0 else False
+        total_weight = 0
+        total_pred = 0
+        for cl in competence_list:
+            w = cl[1] if not use_default else default_weights[cl[0]]
+            total_weight += w
+            total_pred += w * preds[cl[0]][index]
+        pred = total_pred / total_weight
+        if threshold is not None:
+            return 1 if pred >= threshold else 0
+        else:
+            return pred
+
+    @staticmethod
+    def select_most_competence(preds, index, competence_list, competence_assessor, threshold=None):
+        model_idx = competence_list[0][0]
+        if competence_list[0][1] == 0:
+            model_idx = competence_assessor.default_selection()
+        if threshold is not None:
+            return 1 if preds[model_idx][index] >= threshold else 0
+        else:
+            return preds[model_idx][index]
+
+
+class PredictorCompetenceAssessor(object):
+    def __init__(self, models):
+        self._models = models
+        self._default_model_index = None
+
+    def default_selection(self):
+        if self._default_model_index is None:
+            lst = [(idx, self._models[idx].model_data['provenance']['derivation_cohort']['N'])
+                   for idx in range(len(self._models))]
+            lst = sorted(lst, key=lambda t:-t[1])
+            self._default_model_index = lst[0][0]
+        return self._default_model_index
+
+    def evaluate(self, model, x):
+        pass
+
+
+class AgeBasedAssessor(PredictorCompetenceAssessor):
+    def __init__(self, models):
+        super().__init__(models=models)
+
+    def evaluate(self, model, x):
+        age = x['age']
+        prov = model.model_data['provenance']['derivation_cohort']
+        m_age = prov['age']['median']
+        age_range = prov['age']['h25'] - prov['age']['l25']
+        delta = abs(age - m_age) / age_range
+        competence = (1 - delta) if delta <= 1 else 0
+        return competence
