@@ -28,9 +28,9 @@ def auc_roc_analysis(y_list, predicted_probs_list, gen_fig=True, labels=None, fi
     if gen_fig:
         plt.legend(loc="lower right")
         plt.title('%s Model ROC Curves' % fig_title)
-        plt.show()
         if output_file is not None:
             plt.savefig(output_file)
+        plt.show()
     return results
 
 
@@ -58,9 +58,9 @@ def carlibration_analysis(y_list, predicted_probs_list, gen_fig=True, labels=Non
 
     if gen_fig:
         plt.legend(loc="lower right")
-        plt.show()
         if output_file is not None:
             plt.savefig(output_file)
+        plt.show()
     return results
 
 
@@ -84,20 +84,23 @@ def clinical_usefulness(y_list, predicted_list, threshold=None):
     return results
 
 
-def evaluate_pipeline(y_list, predicted_probs_list, model_names=None, threshold=0.5, figs=False, outcome=''):
+def evaluate_pipeline(y_list, predicted_probs_list, model_names=None, threshold=0.5, figs=False, outcome='',
+                      auc_fig_file=None, calibration_fig_file=None):
     return {'c-index': auc_roc_analysis(y_list, predicted_probs_list,
                                         gen_fig=figs,
                                         labels=
                                         [model_name if model_name is not None else ''
                                          for model_name in model_names],
-                                        fig_title=outcome
+                                        fig_title=outcome,
+                                        output_file=auc_fig_file
                                         ),
             'calibration': carlibration_analysis(y_list, predicted_probs_list,
                                                  gen_fig=figs,
                                                  labels=
                                                  [model_name if model_name is not None else ''
                                                   for model_name in model_names],
-                                                 fig_title=outcome
+                                                 fig_title=outcome,
+                                                 output_file=calibration_fig_file
                                                  ),
             'clinical_usefulness': clinical_usefulness(y_list, predicted_probs_list, threshold=threshold)
             }

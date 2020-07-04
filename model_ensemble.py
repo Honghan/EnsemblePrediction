@@ -3,6 +3,9 @@ import models
 
 
 class VoteMode(Enum):
+    """
+    vote mode enumerate
+    """
     majority = 1
     one_vote_positive = 2
     one_vote_negative = 3
@@ -33,7 +36,6 @@ class Ensembler(object):
 
         for m in self._models:
             self._model2weights[m.id] = (m2s[m.id] / max_score) * self._model2weights[m.id]
-            print('weight->', m.id, self._model2weights[m.id])
 
     def predict(self, x):
         models.PredictionModel.check_x(x)
@@ -52,6 +54,9 @@ class Ensembler(object):
 
 
 class BasicEnsembler(Ensembler):
+    """
+    a basic ensembler implemented a set of fusion strategies
+    """
     def __init__(self):
         self._mode = VoteMode.one_vote_positive
         self._competence_assessor = None
@@ -66,11 +71,21 @@ class BasicEnsembler(Ensembler):
         self._mode = v
 
     def get_competence(self):
+        """
+        get competence assessor
+        :return:
+        """
         if self._competence_assessor is None:
             self._competence_assessor = DistBasedAssessor(self.models)
         return self._competence_assessor
 
     def predict(self, x, threshold=0.5):
+        """
+        predict binary output
+        :param x: the data frame
+        :param threshold: threshold for prob cut-off in models predicting probabilities
+        :return:
+        """
         preds = []
         for m in self.models:
             dist = m.model_data['cohort_variable_distribution']
@@ -96,8 +111,8 @@ class BasicEnsembler(Ensembler):
 
     def predict_probs(self, x):
         """
-        score
-        :param x:
+        predict probabilities
+        :param x: the data frame of data to be predicted
         :return:
         """
         if self.mode not in [VoteMode.average_score, VoteMode.max_score, VoteMode.competence_by_age]:
@@ -198,8 +213,6 @@ class BasicEnsembler(Ensembler):
             # competence_list = [(i, competence_assessor.evaluate(models[i], r)) for i in range(len(models))]
             # competence_list = sorted(competence_list, key=lambda cl: -cl[1])
             competence_list = BasicEnsembler.do_combined_competence_score(r, competence_assessor, models)
-            if competence_list[0][0] != 0:
-                print(competence_list)
             if weight_by_competence:
                 new_preds.append(BasicEnsembler.competence_weighted_fuse(preds, idx, competence_list,
                                                                          default_weights, threshold=threshold))
@@ -242,11 +255,20 @@ class BasicEnsembler(Ensembler):
 
     @staticmethod
     def competence_weighted_fuse(preds, index, competence_list, default_weights, threshold=None):
+        """
+        competence weighted fusion - weighted average using competence values of each model
+        :param preds: predictions by models
+        :param index: row index of the data item to be predicted in the X data frame
+        :param competence_list: competence list - a list of tuple: [(model_index, competence_value)]
+        :param default_weights: default weights of each model
+        :param threshold: the threshold to predict 0/1
+        :return: return the fused score or prediction (if threshold is not None)
+        """
         use_default = True if competence_list[0][1] == 0 else False
         total_weight = 0
         total_pred = 0
         for cl in competence_list:
-            w = cl[1] if not use_default else default_weights[cl[0]]
+            w = (cl[1] * default_weights[cl[0]]) if not use_default else default_weights[cl[0]]
             total_weight += w
             total_pred += w * preds[cl[0]][index]
         pred = total_pred / total_weight
@@ -267,6 +289,9 @@ class BasicEnsembler(Ensembler):
 
 
 class PredictorCompetenceAssessor(object):
+    """
+    an abstract compteteence assessor class
+    """
     def __init__(self, models):
         self._models = models
         self._default_model_index = None
@@ -284,6 +309,9 @@ class PredictorCompetenceAssessor(object):
 
 
 class DistBasedAssessor(PredictorCompetenceAssessor):
+    """
+    a competence assessor using distribution of deriviation cohort
+    """
     def __init__(self, models):
         super().__init__(models=models)
 

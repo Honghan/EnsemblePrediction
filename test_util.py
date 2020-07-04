@@ -75,7 +75,8 @@ def test_single_model(model, x, outcome=None, threshold=0.5):
 
 
 def test_models_and_ensemble(model_files, x, weights=None, outcome='death', threshold=0.5, result_csv=None,
-                             severity_conf=None, generate_figs=False):
+                             severity_conf=None, generate_figs=False, auc_fig_file=None,
+                             calibration_fig_file=None):
     """
     do tests on individual models and also ensemble methods
     :param model_files:
@@ -87,6 +88,8 @@ def test_models_and_ensemble(model_files, x, weights=None, outcome='death', thre
     :param severity_conf: severity configuration for setting weights on the alignments between model
     outcomes and what to predict
     :param generate_figs: generate figs or not
+    :param auc_fig_file: roc curve figure output file
+    :param calibration_fig_file: calibration figure output file
     :return:
     """
     data = {}
@@ -111,7 +114,8 @@ def test_models_and_ensemble(model_files, x, weights=None, outcome='death', thre
     predicted_list.append(pred)
     results = eval.evaluate_pipeline(y_list, predicted_list, model_names=[m.id for m in models] + ['ensemble model'],
                                      threshold=threshold,
-                                     figs=generate_figs, outcome=outcome)
+                                     figs=generate_figs, outcome=outcome, auc_fig_file=auc_fig_file,
+                                     calibration_fig_file=calibration_fig_file)
     model_labels = ['{0}\n({1})'.format(m.id, m.model_type) for m in models] + ['ensemble model']
     for idx in range(len(model_labels)):
         data[model_labels[idx]] = {}
@@ -161,7 +165,11 @@ def do_test(config_file):
                                  threshold=config['threshold'],
                                  result_csv=result_file,
                                  severity_conf=None if 'severity_scores' not in config else config['severity_scores'],
-                                 generate_figs=False if 'generate_figs' not in config else config['generate_figs']
+                                 generate_figs=False if 'generate_figs' not in config else config['generate_figs'],
+                                 auc_fig_file=None if 'auc_fig_file_pattern' not in config
+                                 else (config['auc_fig_file_pattern'] % outcome),
+                                 calibration_fig_file=None if 'calibration_fig_file_pattern' not in config
+                                 else (config['calibration_fig_file_pattern'] % outcome)
                                  )
         logging.info('result saved to {0}'.format(result_file))
 
