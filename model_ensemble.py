@@ -24,8 +24,15 @@ class Ensembler(object):
         self._model2weights[prediction_model.id] = weight
 
     def adjust_severity_weight(self, outcome_severity, severity_conf):
+        # normalise severity score
+        m2s = {}
+        max_score = 0
         for m in self._models:
-            self._model2weights[m.id] = severity_conf[m.outcome] / outcome_severity * self._model2weights[m.id]
+            m2s[m.id] = severity_conf[m.outcome] / outcome_severity
+            max_score = max(max_score, m2s[m.id])
+
+        for m in self._models:
+            self._model2weights[m.id] = (m2s[m.id] / max_score) * self._model2weights[m.id]
             print('weight->', m.id, self._model2weights[m.id])
 
     def predict(self, x):
@@ -205,7 +212,7 @@ class BasicEnsembler(Ensembler):
         total_weight = 0
         total_pred = 0
         for cl in competence_list:
-            w = cl[1] if not use_default else default_weights[cl[0]]
+            w = (1.5 * cl[1] + default_weights[cl[0]]) if not use_default else default_weights[cl[0]]
             total_weight += w
             total_pred += w * preds[cl[0]][index]
         pred = total_pred / total_weight

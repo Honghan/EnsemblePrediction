@@ -2,77 +2,105 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def auc_roc_analysis(y, predicted_probs, gen_fig=True, fig_title=None, output_file=None):
+def auc_roc_analysis(y_list, predicted_probs_list, gen_fig=True, labels=None, fig_title='', output_file=None):
     from sklearn.metrics import roc_auc_score
     from sklearn.metrics import roc_curve, auc
-    c_index = roc_auc_score(y, y_score=predicted_probs)
+    results = []
+    fig_data = []
+    for idx in range(len(y_list)):
+        results.append(roc_auc_score(y_list[idx], y_score=predicted_probs_list[idx]))
+        if gen_fig:
+            # Compute ROC curve and ROC area for each class
+            fpr, tpr, _ = roc_curve(y_list[idx], predicted_probs_list[idx])
+            roc_auc = auc(fpr, tpr)
+            # plt.figure()
+            lw = 2
+            label = 'ROC curve (area = %0.2f)' % roc_auc
+            if labels is not None:
+                label = '%s (area = %0.2f)' % (labels[idx], roc_auc)
+            plt.plot(fpr, tpr, lw=lw, label=label)
+            if idx == 0:
+                plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+            plt.xlim([0.0, 1.0])
+            plt.ylim([0.0, 1.05])
+            plt.xlabel('False Positive Rate')
+            plt.ylabel('True Positive Rate')
+    if gen_fig:
+        plt.legend(loc="lower right")
+        plt.title('%s Model ROC Curves' % fig_title)
+        plt.show()
+        if output_file is not None:
+            plt.savefig(output_file)
+    return results
+
+
+def carlibration_analysis(y_list, predicted_probs_list, gen_fig=True, labels=None, fig_title='', output_file=None):
+    from sklearn.calibration import calibration_curve
+    from sklearn.linear_model import LinearRegression
+    results = []
+    for idx in range(len(y_list)):
+        y = y_list[idx]
+        predicted_probs = predicted_probs_list[idx]
+        fraction_of_positives, mean_predicted_value = \
+            calibration_curve(y, predicted_probs, n_bins=15, strategy='uniform')
+        if gen_fig:
+            if idx == 0:
+                plt.plot([0, 1], [0, 1], color='navy', linestyle='--')
+            label = 'calibration curve'
+            if labels is not None:
+                label = labels[idx]
+            plt.plot(mean_predicted_value, fraction_of_positives, "s-", label=label)
+            plt.xlabel('predicted probabilities of events')
+            plt.ylabel('observed probabilities of events')
+            plt.title('%s Model Calibrations' % fig_title)
+        reg = LinearRegression().fit(mean_predicted_value.reshape(-1, 1), fraction_of_positives)
+        results.append({'slope': reg.coef_[0], 'calibration-in-large': reg.intercept_})
 
     if gen_fig:
-        # Compute ROC curve and ROC area for each class
-        fpr, tpr, _ = roc_curve(y, predicted_probs)
-        roc_auc = auc(fpr, tpr)
-
-        plt.figure()
-        lw = 2
-        plt.plot(fpr, tpr, color='darkorange',
-                 lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
-        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        if fig_title is not None:
-            plt.title(fig_title)
         plt.legend(loc="lower right")
         plt.show()
         if output_file is not None:
             plt.savefig(output_file)
-    return c_index
+    return results
 
 
-def carlibration_analysis(y, predicted_probs, gen_fig=True, fig_title=None, output_file=None):
-    from sklearn.calibration import calibration_curve
-    from sklearn.linear_model import LinearRegression
-    fraction_of_positives, mean_predicted_value = \
-        calibration_curve(y, predicted_probs, n_bins=20, strategy='uniform')
-    if gen_fig:
-        plt.plot([0, 1], [0, 1], color='navy', linestyle='--')
-        plt.plot(mean_predicted_value, fraction_of_positives, "s-")
-        plt.xlabel('predicted probabilities of events')
-        plt.ylabel('observed probabilities of events')
-        if fig_title is not None:
-            plt.title(fig_title)
-        plt.show()
-        if output_file is not None:
-            plt.savefig(output_file)
-
-    reg = LinearRegression().fit(mean_predicted_value.reshape(-1, 1), fraction_of_positives)
-    return {'slope': reg.coef_[0], 'calibration-in-large': reg.intercept_}
-
-
-def clinical_usefulness(y, predicted):
+def clinical_usefulness(y_list, predicted_list, threshold=None):
     from sklearn.metrics import confusion_matrix
-    tn, fp, fn, tp = confusion_matrix(y, predicted).ravel()
-    ppv = 1.0 * tp / (tp + fp)
-    sensitivity = 1.0 * tp / (tp + fn)
-    f1 = 2 * ppv * sensitivity / (ppv + sensitivity)
-    return {'ppv': ppv,
-            'sensitivity': sensitivity,
-            'f1-score': f1,
-            'specificity': 1.0 * tn / (tn + fp),
-            'npv': 1.0 * tn / (tn + fn)}
+    results = []
+    for idx in range(len(y_list)):
+        y = y_list[idx]
+        predicted = predicted_list[idx]
+        if threshold is not None:
+            predicted = [(1 if p >= threshold else 0) for p in predicted]
+        tn, fp, fn, tp = confusion_matrix(y, predicted).ravel()
+        ppv = 1.0 * tp / (tp + fp)
+        sensitivity = 1.0 * tp / (tp + fn)
+        f1 = 2 * ppv * sensitivity / (ppv + sensitivity)
+        results.append({'ppv': ppv,
+                        'sensitivity': sensitivity,
+                        'f1-score': f1,
+                        'specificity': 1.0 * tn / (tn + fp),
+                        'npv': 1.0 * tn / (tn + fn)})
+    return results
 
 
-def evaluate_pipeline(y, predicted_probs, model_name=None, threshold=0.5, figs=False):
-    return {'c-index': auc_roc_analysis(y, predicted_probs,
+def evaluate_pipeline(y_list, predicted_probs_list, model_names=None, threshold=0.5, figs=False, outcome=''):
+    return {'c-index': auc_roc_analysis(y_list, predicted_probs_list,
                                         gen_fig=figs,
-                                        fig_title='ROC curve' +
-                                                  (' of ' + model_name if model_name is not None else '')),
-            'calibration': carlibration_analysis(y, predicted_probs,
+                                        labels=
+                                        [model_name if model_name is not None else ''
+                                         for model_name in model_names],
+                                        fig_title=outcome
+                                        ),
+            'calibration': carlibration_analysis(y_list, predicted_probs_list,
                                                  gen_fig=figs,
-                                                 fig_title='calibration plot' +
-                                                           (' of ' + model_name if model_name is not None else '')),
-            'clinical_usefulness': clinical_usefulness(y, [(1 if p >= threshold else 0) for p in predicted_probs])}
+                                                 labels=
+                                                 [model_name if model_name is not None else ''
+                                                  for model_name in model_names],
+                                                 fig_title=outcome
+                                                 ),
+            'clinical_usefulness': clinical_usefulness(y_list, predicted_probs_list, threshold=threshold)
+            }
 
 
 def format_result(model2result):

@@ -46,10 +46,12 @@ def test_ensemble(model, x, outcome='death', threshold=0.5, severity_conf=None, 
         model.adjust_severity_weight(severity_conf[outcome], severity_conf)
     if model.mode in [me.VoteMode.average_score, me.VoteMode.max_score, me.VoteMode.competence_by_age]:
         probs = model.predict_probs(x)
-        result = eval.evaluate_pipeline(y, probs, model_name='ensemble model', threshold=threshold, figs=generate_figs)
-        return result
+        return y, probs
+        # result = eval.evaluate_pipeline(y, probs, model_name='ensemble model', threshold=threshold,
+        #                                 figs=generate_figs, outcome=outcome)
+        # return result
     else:
-        return None
+        return None, None
 
 
 def test_single_model(model, x, outcome=None, threshold=0.5):
@@ -69,8 +71,7 @@ def test_single_model(model, x, outcome=None, threshold=0.5):
     x = di.impute(x, variables=[k for k in dist])
     predicted_probs = np.array(model.predict_prob(x))
     y = x[outcome].to_list()
-    result = eval.evaluate_pipeline(y, predicted_probs, threshold=threshold)
-    return model, result
+    return y, predicted_probs
 
 
 def test_models_and_ensemble(model_files, x, weights=None, outcome='death', threshold=0.5, result_csv=None,
@@ -88,20 +89,35 @@ def test_models_and_ensemble(model_files, x, weights=None, outcome='death', thre
     :param generate_figs: generate figs or not
     :return:
     """
-    results = {}
+    data = {}
     ve = me.BasicEnsembler()
+    y_list = []
+    predicted_list = []
+    models = []
     for idx in range(len(model_files)):
         mf = model_files[idx]
         m = load_model(mf)
-        m, result = test_single_model(m, x, outcome=outcome, threshold=threshold)
+        models.append(m)
+        y, pred = test_single_model(m, x, outcome=outcome, threshold=threshold)
+        y_list.append(y)
+        predicted_list.append(pred)
         ve.add_model(m, 1 if weights is None else weights[idx])
-        results['{0}\n({1})'.format(m.id, m.model_type)] = result
+        # results['{0}\n({1})'.format(m.id, m.model_type)] = result
 
     ve.mode = me.VoteMode.competence_by_age
-    result = test_ensemble(ve, x, threshold=threshold, outcome=outcome, severity_conf=severity_conf,
-                           generate_figs=generate_figs)
-    results['ensemble model'] = result
-    result_df = eval.format_result(results)
+    y, pred = test_ensemble(ve, x, threshold=threshold, outcome=outcome, severity_conf=severity_conf,
+                            generate_figs=generate_figs)
+    y_list.append(y)
+    predicted_list.append(pred)
+    results = eval.evaluate_pipeline(y_list, predicted_list, model_names=[m.id for m in models] + ['ensemble model'],
+                                     threshold=threshold,
+                                     figs=generate_figs, outcome=outcome)
+    model_labels = ['{0}\n({1})'.format(m.id, m.model_type) for m in models] + ['ensemble model']
+    for idx in range(len(model_labels)):
+        data[model_labels[idx]] = {}
+        for k in results:
+            data[model_labels[idx]][k] = results[k][idx]
+    result_df = eval.format_result(data)
     if result_csv is not None:
         result_df.to_csv(result_csv, sep='\t', index=False)
 
