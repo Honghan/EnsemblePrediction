@@ -195,8 +195,9 @@ class BasicEnsembler(Ensembler):
                                  weight_by_competence=False, default_weights=None):
         new_preds = []
         for idx, r in X.iterrows():
-            competence_list = [(i, competence_assessor.evaluate(models[i], r)) for i in range(len(models))]
-            competence_list = sorted(competence_list, key=lambda cl: -cl[1])
+            # competence_list = [(i, competence_assessor.evaluate(models[i], r)) for i in range(len(models))]
+            # competence_list = sorted(competence_list, key=lambda cl: -cl[1])
+            competence_list = BasicEnsembler.do_combined_competence_score(r, competence_assessor, models)
             if weight_by_competence:
                 new_preds.append(BasicEnsembler.competence_weighted_fuse(preds, idx, competence_list,
                                                                          default_weights, threshold=threshold))
@@ -205,6 +206,23 @@ class BasicEnsembler(Ensembler):
                                                                        competence_assessor,
                                                                        threshold=threshold))
         return new_preds
+
+    @staticmethod
+    def do_combined_competence_score(r, competence_assessor, models, largest_N=15000):
+        max_dist_vars_num = 0
+        model_scores = []
+        for i in range(len(models)):
+            m = models[i]
+            vars = [v for v in m.model_data['cohort_variable_distribution']
+                    if 'type' not in m.model_data['cohort_variable_distribution'][v]]
+            max_dist_vars_num = max(max_dist_vars_num, len(vars))
+            score = m.model_data['provenance']['derivation_cohort']['N'] / largest_N
+            for v in vars:
+                score += competence_assessor.evaluate(models[i], r, var=v)
+            model_scores.append((i, score))
+        for idx in range(len(model_scores)):
+            model_scores[idx] = (model_scores[idx][0], model_scores[idx][1] / (max_dist_vars_num + 1))
+        return sorted(model_scores, key=lambda cl: -cl[1])
 
     @staticmethod
     def competence_weighted_fuse(preds, index, competence_list, default_weights, threshold=None):
@@ -256,7 +274,6 @@ class DistBasedAssessor(PredictorCompetenceAssessor):
     def evaluate(self, model, x, var='age'):
         val = x[var]
         dist = model.model_data['cohort_variable_distribution']
-        print(model.id)
         m_var = dist[var]['median']
         var_range = dist[var]['h25'] - dist[var]['l25']
         delta = 0 if dist[var]['l25'] <= val <= dist[var]['h25'] else max( abs(val - m_var) / var_range, 1)
