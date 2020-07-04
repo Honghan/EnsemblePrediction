@@ -13,13 +13,13 @@ def auc_roc_analysis(y_list, predicted_probs_list, gen_fig=True, labels=None, fi
             # Compute ROC curve and ROC area for each class
             fpr, tpr, _ = roc_curve(y_list[idx], predicted_probs_list[idx])
             roc_auc = auc(fpr, tpr)
-            # plt.figure()
             lw = 2
             label = 'ROC curve (area = %0.2f)' % roc_auc
             if labels is not None:
                 label = '%s (area = %0.2f)' % (labels[idx], roc_auc)
             plt.plot(fpr, tpr, lw=lw, label=label)
             if idx == 0:
+                plt.figure()
                 plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
             plt.xlim([0.0, 1.0])
             plt.ylim([0.0, 1.05])
@@ -45,6 +45,7 @@ def carlibration_analysis(y_list, predicted_probs_list, gen_fig=True, labels=Non
             calibration_curve(y, predicted_probs, n_bins=15, strategy='uniform')
         if gen_fig:
             if idx == 0:
+                plt.figure()
                 plt.plot([0, 1], [0, 1], color='navy', linestyle='--')
             label = 'calibration curve'
             if labels is not None:
