@@ -67,7 +67,7 @@ class BasicEnsembler(Ensembler):
 
     def get_competence(self):
         if self._competence_assessor is None:
-            self._competence_assessor = AgeBasedAssessor(self.models)
+            self._competence_assessor = DistBasedAssessor(self.models)
         return self._competence_assessor
 
     def predict(self, x, threshold=0.5):
@@ -249,15 +249,17 @@ class PredictorCompetenceAssessor(object):
         pass
 
 
-class AgeBasedAssessor(PredictorCompetenceAssessor):
+class DistBasedAssessor(PredictorCompetenceAssessor):
     def __init__(self, models):
         super().__init__(models=models)
 
-    def evaluate(self, model, x):
-        age = x['age']
-        prov = model.model_data['provenance']['derivation_cohort']
-        m_age = prov['age']['median']
-        age_range = prov['age']['h25'] - prov['age']['l25']
-        delta = abs(age - m_age) / age_range
+    def evaluate(self, model, x, var='age'):
+        val = x[var]
+        dist = model.model_data['cohort_variable_distribution']
+        print(model.id)
+        m_var = dist[var]['median']
+        var_range = dist[var]['h25'] - dist[var]['l25']
+        delta = 0 if dist[var]['l25'] <= val <= dist[var]['h25'] else max( abs(val - m_var) / var_range, 1)
+        # delta = abs(val - m_var) / var_range
         competence = (1 - delta) if delta <= 1 else 0
         return competence
