@@ -439,7 +439,7 @@ class DistributionImputator(Imputator):
     def impute(self, x_orig, variables):
         if not isinstance(x_orig, pd.DataFrame):
             raise Exception('the parameter x needs to be a pandas DataFrame instance')
-        x = x_orig.copy()
+        x = x_orig  # .copy()
         ignore_impute_vars = []
         for v in variables:
             if v not in x.columns:
