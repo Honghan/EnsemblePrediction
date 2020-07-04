@@ -198,6 +198,8 @@ class BasicEnsembler(Ensembler):
             # competence_list = [(i, competence_assessor.evaluate(models[i], r)) for i in range(len(models))]
             # competence_list = sorted(competence_list, key=lambda cl: -cl[1])
             competence_list = BasicEnsembler.do_combined_competence_score(r, competence_assessor, models)
+            if competence_list[0][0] != 0:
+                print(competence_list)
             if weight_by_competence:
                 new_preds.append(BasicEnsembler.competence_weighted_fuse(preds, idx, competence_list,
                                                                          default_weights, threshold=threshold))
@@ -209,6 +211,19 @@ class BasicEnsembler(Ensembler):
 
     @staticmethod
     def do_combined_competence_score(r, competence_assessor, models, largest_N=15000):
+        """
+        calculate competence of a model on all numeric variables. For each variable, the competence is calculated
+         based on a positively correlated function based on the following.
+        - the distance between the value of the variable to the distribution (median/IQR) of the variable
+        in the derivation cohort.
+        :param r: data row - a pandas series object
+        :param competence_assessor: the competence assessor instance
+        :param models: the list of models to be assessed
+        :param largest_N: the number to be used as denominator in calculate the cohort size based competence of
+        a model.
+        :return: the ordered list (from largest to smallest competences) of tuples:
+        [(model_index, competence_value)]
+        """
         max_dist_vars_num = 0
         model_scores = []
         for i in range(len(models)):
@@ -216,12 +231,13 @@ class BasicEnsembler(Ensembler):
             vars = [v for v in m.model_data['cohort_variable_distribution']
                     if 'type' not in m.model_data['cohort_variable_distribution'][v]]
             max_dist_vars_num = max(max_dist_vars_num, len(vars))
-            score = m.model_data['provenance']['derivation_cohort']['N'] / largest_N
+            score = 0
             for v in vars:
                 score += competence_assessor.evaluate(models[i], r, var=v)
-            model_scores.append((i, score))
+            model_scores.append((i, (score, m.model_data['provenance']['derivation_cohort']['N'] / largest_N)))
         for idx in range(len(model_scores)):
-            model_scores[idx] = (model_scores[idx][0], model_scores[idx][1] / (max_dist_vars_num + 1))
+            scores = model_scores[idx][1]
+            model_scores[idx] = (model_scores[idx][0], (scores[0] / max_dist_vars_num + scores[1]) / 2)
         return sorted(model_scores, key=lambda cl: -cl[1])
 
     @staticmethod
@@ -230,7 +246,7 @@ class BasicEnsembler(Ensembler):
         total_weight = 0
         total_pred = 0
         for cl in competence_list:
-            w = (1.5 * cl[1] + default_weights[cl[0]]) if not use_default else default_weights[cl[0]]
+            w = cl[1] if not use_default else default_weights[cl[0]]
             total_weight += w
             total_pred += w * preds[cl[0]][index]
         pred = total_pred / total_weight
