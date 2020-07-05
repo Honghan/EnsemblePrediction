@@ -1,10 +1,7 @@
 {
-  "data_file": "",
+  "data_file": "FULL_PATH_TO_YOUR_CSV_FILE",
   "sep": "\t",
   "mapping": {
-    "pa_oxygen": "SPO2",
-    "lymphocyte_1": "Lymphocyte count",
-    "crp_1": "CRP"
   },
   "comorbidity_cols": [
     "morbidity_Diabetes",
@@ -13,9 +10,9 @@
     "morbidity_Respiratory diseases",
     "morbidity_Metabolic disorders",
     "morbidity_Tumor",
-    "morbidity_Nephropathy"
+    "morbidity_Renal disease"
   ],
-  "threshold": 0.35,
+  "threshold": 0.5,
   "model_files": [
     "./models/levy_2020.json",
     "./models/xie_2020.json",
@@ -31,8 +28,10 @@
   ],
   "severity_scores": {
     "death": 1.0,
-    "poor_prognosis": 0.2
+    "poor_prognosis": 0.1
   },
   "result_tsv_folder": "./test",
-  "generate_figs": false
+  "generate_figs": true,
+  "auc_fig_file_pattern": "./test/auc_fig_%s.png",
+  "calibration_fig_file_pattern": "./test/calibration_fig_%s.png"
 }
