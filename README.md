@@ -53,3 +53,6 @@ Oxygen saturation
 death
 poor_prognosis - defined as either death or ICU admission
 ```
+
+## contact
+email: honghan.wu@ucl.ac.uk
