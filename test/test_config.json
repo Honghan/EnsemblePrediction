@@ -1,5 +1,5 @@
 {
-  "data_file": "FULL_PATH_TO_YOUR_CSV_FILE",
+  "data_file": "/Users/honghan.wu/git/wuhan_data_process/data/wuhan_ensemble_data_1598.tsv",
   "sep": "\t",
   "mapping": {
   },
@@ -11,6 +11,8 @@
     "morbidity_Metabolic disorders",
     "morbidity_Tumor",
     "morbidity_Renal disease"
+  ],
+  "binary_columns_to_impute": [
   ],
   "threshold": 0.5,
   "model_files": [
