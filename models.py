@@ -428,6 +428,17 @@ class Imputator(object):
         pass
 
 
+class BinaryImputator(Imputator):
+    def __init__(self):
+        super().__init__()
+
+    def impute(self, x, variables, val_generator=lambda num_r: [0] * num_r):
+        for v in variables:
+            if v not in x:
+                x[v] = val_generator(x.shape[0])
+        return x
+
+
 class DistributionImputator(Imputator):
     """
     use median and iqr to impute data

@@ -1,5 +1,5 @@
 import utils
-from models import LogisticRegression, DistributionImputator, DecisionTree, ScoringModel, NomogramModel, NOCOS
+from models import LogisticRegression, DistributionImputator, DecisionTree, ScoringModel, NomogramModel, NOCOS, BinaryImputator
 import data_utils as du
 import model_ensemble as me
 import numpy as np
@@ -152,6 +152,11 @@ def do_test(config_file):
                      sep='\t' if 'sep' not in config else config['sep'],
                      column_mapping=config['mapping'],
                      partial_to_saturation_col=partial_to_saturation_col)
+    if 'binary_columns_to_impute' in config:
+        # impute binary columns
+        logging.info('binary columns to impute [%s]' % config['binary_columns_to_impute'])
+        imputer = BinaryImputator()
+        x = imputer.impute(x, config['binary_columns_to_impute'])
     if 'comorbidity_cols' in config:
         populate_col_by_or(x, config['comorbidity_cols'], new_col_name='comorbidity')
     model_files = config['model_files']
