@@ -4,6 +4,12 @@
 - ensembled 7 prediction models for prediction using fusion strategies based on their competences
 - evaluated single models and the ensembled mode on two large COVID-19 cohorts from Wuhan, China (N=2,384) and King's College Hospital (N=1,475)
 # usage
+### Prerequisite
+install python libraries using `requirements.txt`
+```bash
+pip install -r requirements.txt
+```
+### Setup and Run
 1. edit the experiment setting file: `./test/test_config.json`, changing the following parameters accordingly.
     - `data_file` - the csv file which is the patient level data for prediction. *check full list of variables below*, if numeric columns are missing, they will be automatically imputed using model related distributions.
     - (optional) `sep` - the separator, changing it to comma if your file is comma separated.
