@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ```
 ### Setup and Run
 1. edit the experiment setting file: `./test/test_config.json`, changing the following parameters accordingly.
-    - `data_file` - the csv file which is the patient level data for prediction. *check full list of variables below*, if numeric columns are missing, they will be automatically imputed using model related distributions.
+    - `data_file` - the csv file which is the patient level data for prediction. *check full list of variables [below](https://github.com/Honghan/EnsemblePrediction#variables)*, if numeric columns are missing, they will be automatically imputed using model related distributions.
     - (optional) `sep` - the separator, changing it to comma if your file is comma separated.
     - (optional) `mapping` - a dictionary to map column names
     - `comorbidity_cols` - the list of column names (binary valued) denoting comorbidities. NB: **if you don't have `morbidity_Hypertension` (a mandatory variable), please add an entry to `binary_columns_to_impute`. This will populate all zero column for `binary_columns_to_impute`.**
