@@ -1,5 +1,5 @@
 {
-  "data_file": "/Users/honghan.wu/git/wuhan_data_process/data/wuhan_ensemble_data_1598.tsv",
+  "data_file": "FULL PATH TO YOUR CSV FILE",
   "sep": "\t",
   "mapping": {
   },
@@ -14,7 +14,7 @@
   ],
   "binary_columns_to_impute": [
   ],
-  "threshold": 0.5,
+  "threshold": 0.10,
   "model_files": [
     "./models/levy_2020.json",
     "./models/xie_2020.json",
@@ -33,7 +33,7 @@
     "poor_prognosis": 0.1
   },
   "result_tsv_folder": "./test",
-  "generate_figs": true,
+  "generate_figs": false,
   "auc_fig_file_pattern": "./test/auc_fig_%s.png",
   "calibration_fig_file_pattern": "./test/calibration_fig_%s.png"
 }
