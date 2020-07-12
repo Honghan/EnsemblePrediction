@@ -162,7 +162,7 @@ class CompetenceFusion(object):
         for cl in competence_list:
             if cl[1] == 0:
                 continue
-            w = (2 * cl[1] + default_weights[cl[0]]) if not use_default else default_weights[cl[0]]
+            w = (cl[1] * default_weights[cl[0]]) if not use_default else default_weights[cl[0]]
             total_weight += w
             total_pred += w * preds[cl[0]][index]
         pred = total_pred / total_weight
