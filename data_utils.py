@@ -13,8 +13,11 @@ def PaO2_to_SpO2(pO2):
     return (23400 * (pO2**3 + 150 * pO2)**-1 + 1)**-1 * 100
 
 
-def read_data(data_file, sep='\t', column_mapping=None, partial_to_saturation_col=None):
-    x = pd.read_csv(data_file, sep=sep)
+def read_data(data_file, sep='\t', column_mapping=None, partial_to_saturation_col=None, hdf=False):
+    if hdf:
+        x = pd.read_hdf(data_file, 'df')
+    else:
+        x = pd.read_csv(data_file, sep=sep)
     if partial_to_saturation_col is not None:
         x[partial_to_saturation_col] = [PaO2_to_SpO2(v) for v in x[partial_to_saturation_col]]
     if column_mapping is not None:

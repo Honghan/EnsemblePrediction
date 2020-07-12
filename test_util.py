@@ -44,7 +44,8 @@ def test_ensemble(model, x, outcome='death', threshold=0.5, severity_conf=None, 
     y = x[outcome].to_list()
     if severity_conf is not None:
         model.adjust_severity_weight(severity_conf[outcome], severity_conf)
-    if model.mode in [me.VoteMode.average_score, me.VoteMode.max_score, me.VoteMode.competence_by_age]:
+    if model.mode in [me.VoteMode.average_score, me.VoteMode.max_score, me.VoteMode.most_competence,
+                      me.VoteMode.competence_fusion, me.VoteMode.highest_in_top_competences]:
         probs = model.predict_probs(x)
         return y, probs
         # result = eval.evaluate_pipeline(y, probs, model_name='ensemble model', threshold=threshold,
@@ -107,7 +108,7 @@ def test_models_and_ensemble(model_files, x, weights=None, outcome='death', thre
         ve.add_model(m, 1 if weights is None else weights[idx])
         # results['{0}\n({1})'.format(m.id, m.model_type)] = result
 
-    ve.mode = me.VoteMode.competence_by_age
+    ve.mode = me.VoteMode.competence_fusion
     y, pred = test_ensemble(ve, x, threshold=threshold, outcome=outcome, severity_conf=severity_conf,
                             generate_figs=generate_figs)
     y_list.append(y)
@@ -151,7 +152,8 @@ def do_test(config_file):
     x = du.read_data(config['data_file'],
                      sep='\t' if 'sep' not in config else config['sep'],
                      column_mapping=config['mapping'],
-                     partial_to_saturation_col=partial_to_saturation_col)
+                     partial_to_saturation_col=partial_to_saturation_col,
+                     hdf=False if 'hdf' not in config else config['hdf'])
     if 'binary_columns_to_impute' in config:
         # impute binary columns
         logging.info('binary columns to impute [%s]' % config['binary_columns_to_impute'])
@@ -236,5 +238,6 @@ def summarise_models(models, conf):
 
 if __name__ == "__main__":
     utils.setup_basic_logging(log_level='INFO', file='ensemble.log')
+    do_test('./test/test_config_kl-wuhan.json')
     do_test('./test/test_config.json')
     # get_all_variables_from_models('./models', utils.load_json_data('./test/model_sum_conf.json'))
