@@ -77,11 +77,15 @@ def clinical_usefulness(y_list, predicted_list, threshold=None):
         ppv = 1.0 * tp / (tp + fp)
         sensitivity = 1.0 * tp / (tp + fn)
         f1 = 2 * ppv * sensitivity / (ppv + sensitivity)
+        specificity = 1.0 * tn / (tn + fp)
+        r = (1 - specificity) / (2 - specificity - sensitivity)
         results.append({'ppv': ppv,
                         'sensitivity': sensitivity,
                         'f1-score': f1,
-                        'specificity': 1.0 * tn / (tn + fp),
-                        'npv': 1.0 * tn / (tn + fn)})
+                        'specificity': specificity,
+                        'npv': 1.0 * tn / (tn + fn),
+                        'Event-ratio': r,
+                        'predicted': (tp+fp)})
     return results
 
 
