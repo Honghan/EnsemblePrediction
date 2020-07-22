@@ -23,18 +23,18 @@ def auc_roc_analysis(y_list, predicted_probs_list, gen_fig=True, labels=None, fi
                 if cis is None:
                     label = '%s: %0.2f' % (labels[idx], roc_auc)
                 else:
-                    label = '%s: %0.2f (%0.2f-%0.2f)' % (labels[idx], cis[idx][2], cis[idx][0], cis[idx][1])
+                    label = '%s: %0.3f (%0.3f-%0.3f)' % (labels[idx], cis[idx][2], cis[idx][0], cis[idx][1])
             if idx == 0:
                 plt.figure()
                 plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
             plt.plot(fpr, tpr, lw=lw, label=label)
             plt.xlim([0.0, 1.0])
             plt.ylim([0.0, 1.05])
-            plt.xlabel('False Positive Rate')
-            plt.ylabel('True Positive Rate')
+            plt.xlabel('1 - Specificity', fontsize=16)
+            plt.ylabel('Sensitivity', fontsize=16)
     if gen_fig:
-        plt.legend(loc="lower right")
-        plt.title('%s Model ROC Curves' % fig_title)
+        plt.legend(loc="lower right", fontsize=12)
+        # plt.title('%s Model ROC Curves' % fig_title)
         if output_file is not None:
             plt.savefig(output_file)
         plt.show()
