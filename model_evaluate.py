@@ -1,8 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.utils import resample
+import numpy
 
 
-def auc_roc_analysis(y_list, predicted_probs_list, gen_fig=True, labels=None, fig_title='', output_file=None):
+def auc_roc_analysis(y_list, predicted_probs_list, gen_fig=True, labels=None, fig_title='',
+                     cis=None,
+                     output_file=None):
     from sklearn.metrics import roc_auc_score
     from sklearn.metrics import roc_curve, auc
     results = []
@@ -16,11 +20,14 @@ def auc_roc_analysis(y_list, predicted_probs_list, gen_fig=True, labels=None, fi
             lw = 2
             label = 'ROC curve (area = %0.2f)' % roc_auc
             if labels is not None:
-                label = '%s (area = %0.2f)' % (labels[idx], roc_auc)
-            plt.plot(fpr, tpr, lw=lw, label=label)
+                if cis is None:
+                    label = '%s: %0.2f' % (labels[idx], roc_auc)
+                else:
+                    label = '%s: %0.2f (%0.2f-%0.2f)' % (labels[idx], cis[idx][2], cis[idx][0], cis[idx][1])
             if idx == 0:
                 plt.figure()
                 plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+            plt.plot(fpr, tpr, lw=lw, label=label)
             plt.xlim([0.0, 1.0])
             plt.ylim([0.0, 1.05])
             plt.xlabel('False Positive Rate')
@@ -55,7 +62,8 @@ def carlibration_analysis(y_list, predicted_probs_list, gen_fig=True, labels=Non
             plt.ylabel('observed probabilities of events')
             plt.title('%s Model Calibrations' % fig_title)
         reg = LinearRegression().fit(mean_predicted_value.reshape(-1, 1), fraction_of_positives)
-        results.append({'slope': reg.coef_[0], 'calibration-in-large': reg.intercept_})
+        results.append({'slope': '{:.3f}'.format(reg.coef_[0]),
+                        'calibration-in-large': '{:.3f}'.format(reg.intercept_)})
 
     if gen_fig:
         plt.legend(loc="lower right")
@@ -78,37 +86,76 @@ def clinical_usefulness(y_list, predicted_list, threshold=None):
         sensitivity = 1.0 * tp / (tp + fn)
         f1 = 2 * ppv * sensitivity / (ppv + sensitivity)
         specificity = 1.0 * tn / (tn + fp)
-        r = (1 - specificity) / (2 - specificity - sensitivity)
-        results.append({'ppv': ppv,
-                        'sensitivity': sensitivity,
-                        'f1-score': f1,
-                        'specificity': specificity,
-                        'npv': 1.0 * tn / (tn + fn),
-                        'Event-ratio': r,
-                        'predicted': (tp+fp)})
+        results.append({'ppv': '{:.3f}'.format(ppv),
+                        'sensitivity': '{:.3f}'.format(sensitivity),
+                        'f1-score': '{:.3f}'.format(f1),
+                        'specificity': '{:.3f}'.format(specificity),
+                        'npv': '{:.3f}'.format(1.0 * tn / (tn + fn)),
+                        'predict rate': '{:.3f}'.format((tp+fp) / len(y_list[0])),
+                        'predicted': (tp+fp),
+                        'tp': tp,
+                        'fp': fp,
+                        'tn': tn,
+                        'fn': fn})
     return results
+
+
+def get_confidence_interval(results, alpha=0.95):
+    p = ((1.0-alpha)/2.0) * 100
+    lower = max(0.0, numpy.percentile(results, p))
+    p = (alpha+((1.0-alpha)/2.0)) * 100
+    upper = min(1.0, numpy.percentile(results, p))
+    mean = numpy.average(results)
+    return lower, upper, mean
 
 
 def evaluate_pipeline(y_list, predicted_probs_list, model_names=None, threshold=0.5, figs=False, outcome='',
                       auc_fig_file=None, calibration_fig_file=None):
-    return {'c-index': auc_roc_analysis(y_list, predicted_probs_list,
-                                        gen_fig=figs,
-                                        labels=
-                                        [model_name if model_name is not None else ''
-                                         for model_name in model_names],
-                                        fig_title=outcome,
-                                        output_file=auc_fig_file
-                                        ),
-            'calibration': carlibration_analysis(y_list, predicted_probs_list,
-                                                 gen_fig=figs,
-                                                 labels=
-                                                 [model_name if model_name is not None else ''
-                                                  for model_name in model_names],
-                                                 fig_title=outcome,
-                                                 output_file=calibration_fig_file
-                                                 ),
-            'clinical_usefulness': clinical_usefulness(y_list, predicted_probs_list, threshold=threshold)
-            }
+    n_iterations = 100
+    total_results = None
+    for i in range(n_iterations):
+        # prepare train and test sets
+        y, indices = resample(y_list[0], [idx for idx in range(len(y_list[0]))])
+        results = auc_roc_analysis([[y_list[idx][i] for i in indices] for idx in range(len(y_list))],
+                                   [[predicted_probs_list[idx][i] for i in indices]
+                                    for idx in range(len(predicted_probs_list))],
+                                   gen_fig=False)
+        if total_results is None:
+            total_results = numpy.array(results)
+        else:
+            total_results = numpy.vstack((total_results, numpy.array(results)))
+    cis = [get_confidence_interval(total_results[:, c]) for c in range(total_results.shape[1])]
+
+    if figs:
+        auc_roc_analysis(y_list, predicted_probs_list,
+                         gen_fig=figs,
+                         labels=
+                         [model_name if model_name is not None else ''
+                          for model_name in model_names],
+                         fig_title=outcome,
+                         output_file=auc_fig_file,
+                         cis=cis
+                         )
+
+    result = {
+              'c-index': ['{:.3f} ({:.2f}-{:.2f})'.format(cis[idx][2], cis[idx][0], cis[idx][1])
+                          for idx in range(len(cis))],
+              'calibration': carlibration_analysis(y_list, predicted_probs_list,
+                                                   gen_fig=figs,
+                                                   labels=
+                                                   [model_name if model_name is not None else ''
+                                                    for model_name in model_names],
+                                                   fig_title=outcome,
+                                                   output_file=calibration_fig_file)
+              }
+    if threshold is None or not list == type(threshold):
+        result['clinical_usefulness (threshold %s)' % threshold] = \
+            clinical_usefulness(y_list, predicted_probs_list, threshold=threshold)
+    else:
+        for th in threshold:
+            result['clinical_usefulness (threshold %s)' % th] = \
+                clinical_usefulness(y_list, predicted_probs_list, threshold=th)
+    return result
 
 
 def format_result(model2result):
