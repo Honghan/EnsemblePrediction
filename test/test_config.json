@@ -30,7 +30,7 @@
   ],
   "severity_scores": {
     "death": 1.0,
-    "poor_prognosis": 0.1
+    "poor_prognosis": 0.3
   },
   "result_tsv_folder": "./test",
   "generate_figs": true,
