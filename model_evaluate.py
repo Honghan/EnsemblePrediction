@@ -23,7 +23,7 @@ def auc_roc_analysis(y_list, predicted_probs_list, gen_fig=True, labels=None, fi
                 if cis is None:
                     label = '%s: %0.2f' % (labels[idx], roc_auc)
                 else:
-                    label = '%s: %0.3f (%0.3f-%0.3f)' % (labels[idx], cis[idx][2], cis[idx][0], cis[idx][1])
+                    label = '%s: %0.3f (%0.3f-%0.3f)' % (labels[idx], roc_auc, cis[idx][0], cis[idx][1])
             if idx == 0:
                 plt.figure()
                 plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
@@ -34,7 +34,7 @@ def auc_roc_analysis(y_list, predicted_probs_list, gen_fig=True, labels=None, fi
             plt.ylabel('Sensitivity', fontsize=16)
     if gen_fig:
         plt.legend(loc="lower right", fontsize=12)
-        # plt.title('%s Model ROC Curves' % fig_title)
+        plt.title('Outcome: %s' % fig_title)
         if output_file is not None:
             plt.savefig(output_file)
         plt.show()
@@ -62,8 +62,8 @@ def carlibration_analysis(y_list, predicted_probs_list, gen_fig=True, labels=Non
             plt.ylabel('observed probabilities of events')
             plt.title('%s Model Calibrations' % fig_title)
         reg = LinearRegression().fit(mean_predicted_value.reshape(-1, 1), fraction_of_positives)
-        results.append({'slope': '{:.3f}'.format(reg.coef_[0]),
-                        'calibration-in-large': '{:.3f}'.format(reg.intercept_)})
+        results.append({'slope': reg.coef_[0],
+                        'calibration-in-large': reg.intercept_})
 
     if gen_fig:
         plt.legend(loc="lower right")
@@ -73,30 +73,55 @@ def carlibration_analysis(y_list, predicted_probs_list, gen_fig=True, labels=Non
     return results
 
 
-def clinical_usefulness(y_list, predicted_list, threshold=None):
+def clinical_usefulness(y_list, predicted_list, threshold=None, event_rate=None):
     from sklearn.metrics import confusion_matrix
     results = []
     for idx in range(len(y_list)):
         y = y_list[idx]
         predicted = predicted_list[idx]
-        if threshold is not None:
-            predicted = [(1 if p >= threshold else 0) for p in predicted]
+        close_rate = None
+        if event_rate is not None:
+            num_expected = event_rate * len(y)
+            min_diff = 50000
+            closest_predicted = None
+            for t in range(10, 500):
+                th = (1.0 * t / 1000)
+                predicted_binary = [(1 if p >= th else 0) for p in predicted]
+                num_predicted = sum(predicted_binary)
+                cur_diff = abs(num_expected - num_predicted)
+                if cur_diff <= min_diff:
+                    closest_predicted = predicted_binary
+                    if cur_diff < min_diff:
+                        # only use the first cut-off that leads to the prediction rate
+                        threshold = th
+                    min_diff = cur_diff
+                else:
+                    break
+            close_rate = (1 - min_diff / num_expected) if min_diff < num_expected else 0
+            predicted = closest_predicted
+        else:
+            if threshold is not None:
+                predicted = [(1 if p >= threshold else 0) for p in predicted]
         tn, fp, fn, tp = confusion_matrix(y, predicted).ravel()
         ppv = 1.0 * tp / (tp + fp)
         sensitivity = 1.0 * tp / (tp + fn)
         f1 = 2 * ppv * sensitivity / (ppv + sensitivity)
         specificity = 1.0 * tn / (tn + fp)
-        results.append({'ppv': '{:.3f}'.format(ppv),
-                        'sensitivity': '{:.3f}'.format(sensitivity),
-                        'f1-score': '{:.3f}'.format(f1),
-                        'specificity': '{:.3f}'.format(specificity),
-                        'npv': '{:.3f}'.format(1.0 * tn / (tn + fn)),
-                        'predict rate': '{:.3f}'.format((tp+fp) / len(y_list[0])),
-                        'predicted': (tp+fp),
-                        'tp': tp,
-                        'fp': fp,
-                        'tn': tn,
-                        'fn': fn})
+        result = {'ppv': '{:.3f}'.format(ppv),
+                  'sensitivity': '{:.3f}'.format(sensitivity),
+                  'f1-score': '{:.3f}'.format(f1),
+                  'specificity': '{:.3f}'.format(specificity),
+                  'npv': '{:.3f}'.format(1.0 * tn / (tn + fn)),
+                  'predict rate': '{:.3f}'.format((tp+fp) / len(y_list[0])),
+                  'threshold': threshold,
+                  'predicted': (tp+fp),
+                  'tp': tp,
+                  'fp': fp,
+                  'tn': tn,
+                  'fn': fn}
+        if close_rate is not None:
+            result['close_rate'] = close_rate
+        results.append(result)
     return results
 
 
@@ -109,10 +134,40 @@ def get_confidence_interval(results, alpha=0.95):
     return lower, upper, mean
 
 
+def create_add_row2ndarray(total_results, row):
+    if total_results is None:
+        if type(row[0]) == dict:
+            total_results = {}
+            for k in row[0]:
+                total_results[k] = numpy.array([r[k] for r in row])
+        else:
+            total_results = numpy.array(row)
+    else:
+        if type(row[0]) == dict:
+            for k in row[0]:
+                total_results[k] = numpy.vstack((total_results[k], numpy.array([r[k] for r in row])))
+        else:
+            total_results = numpy.vstack((total_results, numpy.array(row)))
+    return total_results
+
+
+def get_dict_results(cal_results):
+    cal_cis = []
+    kys = [k for k in cal_results]
+    for c in range(cal_results[kys[0]].shape[1]):
+        t = {}
+        for k in kys:
+            l, h, m = get_confidence_interval(cal_results[k][:, c])
+            t[k] = '{:.3f} ({:.3f}-{:.3f})'.format(m, l, h)
+        cal_cis.append(t)
+    return cal_cis
+
+
 def evaluate_pipeline(y_list, predicted_probs_list, model_names=None, threshold=0.5, figs=False, outcome='',
-                      auc_fig_file=None, calibration_fig_file=None):
-    n_iterations = 100
-    total_results = None
+                      auc_fig_file=None, calibration_fig_file=None, event_rate=None):
+    n_iterations = 500
+    auc_total_results = None
+    cal_results = None
     for i in range(n_iterations):
         # prepare train and test sets
         y, indices = resample(y_list[0], [idx for idx in range(len(y_list[0]))])
@@ -120,11 +175,12 @@ def evaluate_pipeline(y_list, predicted_probs_list, model_names=None, threshold=
                                    [[predicted_probs_list[idx][i] for i in indices]
                                     for idx in range(len(predicted_probs_list))],
                                    gen_fig=False)
-        if total_results is None:
-            total_results = numpy.array(results)
-        else:
-            total_results = numpy.vstack((total_results, numpy.array(results)))
-    cis = [get_confidence_interval(total_results[:, c]) for c in range(total_results.shape[1])]
+        auc_total_results = create_add_row2ndarray(auc_total_results, results)
+        results = carlibration_analysis(y_list, predicted_probs_list,
+                                        gen_fig=False)
+        cal_results = create_add_row2ndarray(cal_results, results)
+
+    auc_cis = [get_confidence_interval(auc_total_results[:, c]) for c in range(auc_total_results.shape[1])]
 
     if figs:
         auc_roc_analysis(y_list, predicted_probs_list,
@@ -134,21 +190,18 @@ def evaluate_pipeline(y_list, predicted_probs_list, model_names=None, threshold=
                           for model_name in model_names],
                          fig_title=outcome,
                          output_file=auc_fig_file,
-                         cis=cis
+                         cis=auc_cis
                          )
 
     result = {
-              'c-index': ['{:.3f} ({:.2f}-{:.2f})'.format(cis[idx][2], cis[idx][0], cis[idx][1])
-                          for idx in range(len(cis))],
-              'calibration': carlibration_analysis(y_list, predicted_probs_list,
-                                                   gen_fig=figs,
-                                                   labels=
-                                                   [model_name if model_name is not None else ''
-                                                    for model_name in model_names],
-                                                   fig_title=outcome,
-                                                   output_file=calibration_fig_file)
+              'c-index': ['{:.3f} ({:.2f}-{:.2f})'.format(auc_cis[idx][2], auc_cis[idx][0], auc_cis[idx][1])
+                          for idx in range(len(auc_cis))],
+              'calibration': get_dict_results(cal_results)
               }
-    if threshold is None or not list == type(threshold):
+    if event_rate is not None:
+        result['clinical_usefulness (threshold %s)' % threshold] = \
+            clinical_usefulness(y_list, predicted_probs_list, threshold=threshold, event_rate=event_rate)
+    elif threshold is None or not list == type(threshold):
         result['clinical_usefulness (threshold %s)' % threshold] = \
             clinical_usefulness(y_list, predicted_probs_list, threshold=threshold)
     else:
