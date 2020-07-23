@@ -77,9 +77,10 @@ def test_single_model(model, x, outcome=None, threshold=0.5):
 
 def test_models_and_ensemble(model_files, x, weights=None, outcome='death', threshold=0.5, result_csv=None,
                              severity_conf=None, generate_figs=False, auc_fig_file=None,
-                             calibration_fig_file=None):
+                             calibration_fig_file=None, event_rate=None):
     """
     do tests on individual models and also ensemble methods
+    :param event_rate:
     :param model_files:
     :param x:
     :param weights:
@@ -116,7 +117,8 @@ def test_models_and_ensemble(model_files, x, weights=None, outcome='death', thre
     results = eval.evaluate_pipeline(y_list, predicted_list, model_names=[m.id for m in models] + ['ensemble model'],
                                      threshold=threshold,
                                      figs=generate_figs, outcome=outcome, auc_fig_file=auc_fig_file,
-                                     calibration_fig_file=calibration_fig_file)
+                                     calibration_fig_file=calibration_fig_file,
+                                     event_rate=event_rate)
     model_labels = ['{0}\n({1})'.format(m.id, m.model_type) for m in models] + ['ensemble model']
     for idx in range(len(model_labels)):
         data[model_labels[idx]] = {}
@@ -176,7 +178,8 @@ def do_test(config_file):
                                  auc_fig_file=None if 'auc_fig_file_pattern' not in config
                                  else (config['auc_fig_file_pattern'] % outcome),
                                  calibration_fig_file=None if 'calibration_fig_file_pattern' not in config
-                                 else (config['calibration_fig_file_pattern'] % outcome)
+                                 else (config['calibration_fig_file_pattern'] % outcome),
+                                 event_rate=None if 'event_rate' not in config else config['event_rate']
                                  )
         logging.info('result saved to {0}'.format(result_file))
 
