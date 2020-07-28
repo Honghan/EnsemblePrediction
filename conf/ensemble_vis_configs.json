@@ -1,0 +1,206 @@
+{
+  "raw_data": "=full path to your data file=",
+  "desc_tab_output": "./test/desc_tab1.tsv",
+  "remove_na": false,
+  "outcome_labels": {
+    "death": [{"value": 0, "label": "Did not die (n={:d})"}, {"value": 1, "label": "Died (n={:d})"}],
+    "poor_outcome": [{"value": 0, "label": "Not poor outcome (n={:d})"}, {"value": 1, "label": "Poor outcome (n={:d})"}]
+  },
+  "desc_tab": [
+    {
+      "category": "Demographic",
+      "variables": [
+        {
+          "label": "Age",
+          "field": "age",
+          "type": "numeric"
+        },
+        {
+          "label": "Sex (male) ",
+          "field": "Male",
+          "type": "binary"
+        },
+        {
+          "label": "Smoking",
+          "field": "smoking",
+          "type": "binary"
+        }
+      ]
+    },
+    {
+      "category": "Comorbidities",
+      "variables": [
+        {
+          "label": "Diabetes",
+          "field": "morbidity_Diabetes",
+          "type": "binary"
+        },
+        {
+          "label": "Hypertension",
+          "field": "morbidity_Hypertension",
+          "type": "binary"
+        },
+        {
+          "label": "Heart disease",
+          "field": "morbidity_Heart disease",
+          "type": "binary"
+        },
+        {
+          "label": "Endocrine system diseases",
+          "field": "morbidity_Endocrine system diseases",
+          "type": "binary"
+        },
+        {
+          "label": "Liver disease",
+          "field": "morbidity_Liver disease",
+          "type": "binary"
+        },
+        {
+          "label": "Metabolic disorders",
+          "field": "morbidity_Metabolic disorders",
+          "type": "binary"
+        },
+        {
+          "label": "Cerebrovascular disease",
+          "field": "morbidity_Cerebrovascular disease",
+          "type": "binary"
+        },
+        {
+          "label": "Digestive system diseases",
+          "field": "morbidity_Digestive system diseases",
+          "type": "binary"
+        },
+        {
+          "label": "Tumor",
+          "field": "morbidity_Tumor",
+          "type": "binary"
+        },
+        {
+          "label": "COPD",
+          "field": "morbidity_COPD",
+          "type": "binary"
+        },
+        {
+          "label": "Other respiratory diseases",
+          "field": "morbidity_Respiratory diseases",
+          "type": "binary"
+        },
+        {
+          "label": "Renal disease",
+          "field": "morbidity_Renal disease",
+          "type": "binary"
+        },
+        {
+          "label": "Urinary system diseases",
+          "field": "morbidity_Urinary system diseases",
+          "type": "binary"
+        },
+        {
+          "label": "Blood system diseases",
+          "field": "morbidity_Blood system diseases",
+          "type": "binary"
+        },
+        {
+          "label": "other_conditions",
+          "field": "morbidity_other_conditions",
+          "type": "binary"
+        }
+      ]
+    },
+    {
+      "category": "Admission clinical features",
+      "variables": [
+        {
+          "label": "Red cell distribution width",
+          "field": "Red cell distribution width",
+          "type": "numeric",
+          "decimal": true
+        },
+        {
+          "label": "Albumin",
+          "field": "Albumin",
+          "type": "numeric",
+          "decimal": true
+        },
+        {
+          "label": "C-reactive protein",
+          "field": "C-reactive protein",
+          "type": "numeric",
+          "decimal": true
+        },
+        {
+          "label": "Serum blood urea nitrogen",
+          "field": "Serum blood urea nitrogen",
+          "type": "numeric",
+          "decimal": true
+        },
+        {
+          "label": "Lymphocyte count",
+          "field": "Lymphocyte count",
+          "type": "numeric",
+          "decimal": true
+        },
+        {
+          "label": "Direct bilirubin",
+          "field": "Direct bilirubin",
+          "type": "numeric",
+          "decimal": true
+        },
+        {
+          "label": "Lactate dehydrogenase",
+          "field": "Lactate dehydrogenase",
+          "type": "numeric",
+          "decimal": true
+        },
+        {
+          "label": "Serum sodium",
+          "field": "Serum sodium",
+          "type": "numeric",
+          "decimal": true
+        },
+        {
+          "label": "Neutrophil count",
+          "field": "Neutrophil count",
+          "type": "numeric",
+          "decimal": true
+        }
+      ]
+    },
+    {
+      "category": "Vital signs",
+      "variables": [
+        {
+          "label": "Respiratory rate",
+          "field": "Respiratory rate",
+          "type": "numeric"
+        },
+        {
+          "label": "Systolic blood pressure",
+          "field": "Systolic BP",
+          "type": "numeric"
+        },
+        {
+          "label": "Diastolic blood pressure",
+          "field": "Diastolic BP",
+          "type": "numeric"
+        },
+        {
+          "label": "Heart rate",
+          "field": "Pulse_d1_average",
+          "type": "numeric"
+        },
+        {
+          "label": "Temperature",
+          "field": "Temperature",
+          "type": "numeric"
+        },
+        {
+          "label": "Oxygen saturation",
+          "field": "Oxygen saturation",
+          "type": "numeric",
+          "decimal": true
+        }
+      ]
+    }
+  ]
+}
