@@ -60,5 +60,11 @@ death
 poor_prognosis - defined as either death or ICU admission
 ```
 
+## generate cohort descriptive table
+1. change the display configuration file `./conf/ensemble_vis_configs.json` to specify where your data file is by changing `raw_data` value there. 
+2. run the following script 
+    ```python
+    python fig_tab_generator.py
+    ```
 ## contact
 email: honghan.wu@ucl.ac.uk
