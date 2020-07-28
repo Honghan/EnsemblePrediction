@@ -66,5 +66,6 @@ poor_prognosis - defined as either death or ICU admission
     ```python
     python fig_tab_generator.py
     ```
+3. result file will be at `test/desc_tab1.tsv`.
 ## contact
 email: honghan.wu@ucl.ac.uk
