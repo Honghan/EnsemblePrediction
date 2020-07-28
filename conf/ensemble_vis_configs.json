@@ -4,7 +4,7 @@
   "remove_na": false,
   "outcome_labels": {
     "death": [{"value": 0, "label": "Did not die (n={:d})"}, {"value": 1, "label": "Died (n={:d})"}],
-    "poor_outcome": [{"value": 0, "label": "Not poor outcome (n={:d})"}, {"value": 1, "label": "Poor outcome (n={:d})"}]
+    "poor_prognosis": [{"value": 0, "label": "Not poor outcome (n={:d})"}, {"value": 1, "label": "Poor outcome (n={:d})"}]
   },
   "desc_tab": [
     {
