@@ -2,7 +2,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import json, codecs
-from os.path import join
+from os.path import join, isfile
+from os import listdir
 import math
 import utils
 
@@ -31,7 +32,8 @@ class VisGenerator(object):
         sr.replace(regex=True, to_replace=r'[^\d\.]', value=r'', inplace=True)
         sr = pd.to_numeric(sr)
         fmt = '{:.1f} ({:.1f}-{:.1f})' if decimal else '{:.0f} ({:.0f}-{:.0f})'
-        return fmt.format(sr.median(), sr.quantile(0.25), sr.quantile(0.75))
+        return fmt.format(sr.median(), sr.quantile(0.25), sr.quantile(0.75)), \
+               [sr.min(), sr.quantile(0.25), sr.median(), sr.quantile(0.75), sr.max()]
         # fmt = '{:.1f} ({:.1f}-{:.1f})' if decimal else '{:.0f} ({:.0f}-{:.0f})'
         # return fmt.format(sr.median(), sr.quantile(0.75) - sr.quantile(0.25))
 
@@ -41,7 +43,7 @@ class VisGenerator(object):
             need_dec = True if 'decimal' in v and v['decimal'] else False
             return VisGenerator.stat_analyse_numeric(cohort[col], decimal=need_dec)
         elif v['type'] == 'binary':
-            return VisGenerator.stat_analyse_binary(cohort[col])
+            return VisGenerator.stat_analyse_binary(cohort[col]), None
 
     @staticmethod
     def stat_analyse_binary(sr):
@@ -62,6 +64,7 @@ class VisGenerator(object):
                 sub_cohorts.append(sc)
                 sub_cohort_headers.append(val_label['label'].format(sc.shape[0]))
         result = []
+        v2boxdata = {}
         for cat in config:
             c = cat['category']
             vars = cat['variables']
@@ -77,7 +80,10 @@ class VisGenerator(object):
                     row.append('-')
                 else:
                     row.append(self._df[self._df[col].notna()].shape[0])
-                    row.append(VisGenerator.get_value_from_cohort(v, col, self._df))
+                    formated, quantiles = VisGenerator.get_value_from_cohort(v, col, self._df)
+                    print(quantiles)
+                    row.append(formated)
+                    v2boxdata[v['label']] = quantiles
                 for cohort in sub_cohorts:
                     # if idx % 2 == 0:
                     #     if col not in self._df.columns:
@@ -94,7 +100,7 @@ class VisGenerator(object):
                 cat_result['data'].append(row)
         headers = ['Variable', 'N (all)', 'All (n={:d})'.format(self._df.shape[0])] + sub_cohort_headers
         viz = VisGenerator.format_tab(headers, result, format='tsv')
-        return result, viz
+        return result, viz, v2boxdata
 
     def print_basic_stats(self, config):
         for cat in config:
@@ -546,13 +552,44 @@ def gen_predictor_point_plots(conf):
             idx += 1
 
 
+def gen_box_plot_statistics(folder):
+    files = [f for f in listdir(folder) if isfile(join(folder, f))]
+    d_dicts = {}
+    for f in files:
+        ds_name = f[:f.rfind('.')]
+        dd = utils.load_json_data(join(folder, f))
+        for v in dd:
+            if None == dd[v]:
+                continue
+            if v not in d_dicts:
+                d_dicts[v] = {'label': ['min', 'max', 'median', 'q3',
+                                        'q1-min', 'q1', 'median-q1', 'q3-median', 'max-q3']}
+            v_min = dd[v][0]
+            q1 = dd[v][1]
+            median = dd[v][2]
+            q3 = dd[v][3]
+            v_max = dd[v][4]
+            d_dicts[v][ds_name] = [v_min, v_max, median, q3, q1-v_min, q1, median-q1, q3-median, v_max-q3]
+    for v in d_dicts:
+        df = pd.DataFrame(d_dicts[v])
+        print('%s\n' % v)
+        print(df.head(10))
+        print('\n\n')
+
+
 if __name__ == "__main__":
     tab_confs = load_json_data('./conf/ensemble_vis_configs.json')
     remove_na = False if 'remove_na' not in tab_confs else tab_confs['remove_na']
     vg = VisGenerator(tab_confs['raw_data'], remove_na=remove_na)
     # - descriptive tables
-    _, viz = vg.descriptive_table(tab_confs['desc_tab'], outcome_labels=tab_confs['outcome_labels'])
+    _, viz, boxplot_data = vg.descriptive_table(tab_confs['desc_tab'], outcome_labels=tab_confs['outcome_labels'])
     print(viz)
+    print(json.dumps(boxplot_data))
+    if 'var_detail_output' in tab_confs:
+        utils.save_json_array(boxplot_data, tab_confs['var_detail_output'])
+        print('%s saved' % tab_confs['var_detail_output'])
     if 'desc_tab_output' in tab_confs:
         utils.save_string(viz, tab_confs['desc_tab_output'])
         print('%s saved' % tab_confs['desc_tab_output'])
+
+    # gen_box_plot_statistics('./cohort-vars')
