@@ -176,7 +176,7 @@ class DistBasedAssessor(PredictorCompetenceAssessor):
         dist = model.model_data['cohort_variable_distribution']
         m_var = dist[var]['median']
         var_range = dist[var]['h25'] - dist[var]['l25']
-        delta = 0 if dist[var]['l25'] <= val <= dist[var]['h25'] else max( abs(val - m_var) / var_range, 1)
+        delta = 0 if dist[var]['l25'] <= val <= dist[var]['h25'] else min(abs(val - m_var) / var_range, 1)
         # delta = abs(val - m_var) / var_range
-        competence = (1 - delta) if delta <= 1 else 0
+        competence = 1 - delta
         return competence
