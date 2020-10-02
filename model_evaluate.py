@@ -73,9 +73,11 @@ def carlibration_analysis(y_list, predicted_probs_list, gen_fig=True, labels=Non
     return results
 
 
-def clinical_usefulness(y_list, predicted_list, threshold=None, event_rate=None):
+def clinical_usefulness(y_list, predicted_list, threshold=None, event_rate=None, idx_to_compare=0):
     from sklearn.metrics import confusion_matrix
     results = []
+    pred_orig = None
+    pred_improved = None
     for idx in range(len(y_list)):
         y = y_list[idx]
         predicted = predicted_list[idx]
@@ -102,6 +104,10 @@ def clinical_usefulness(y_list, predicted_list, threshold=None, event_rate=None)
         else:
             if threshold is not None:
                 predicted = [(1 if p >= threshold else 0) for p in predicted]
+        if idx == idx_to_compare:
+            pred_orig = predicted
+        if idx == len(y_list) - 1:
+            pred_improved = predicted
         tn, fp, fn, tp = confusion_matrix(y, predicted).ravel()
         ppv = 1.0 * tp / (tp + fp)
         sensitivity = 1.0 * tp / (tp + fn)
@@ -122,7 +128,33 @@ def clinical_usefulness(y_list, predicted_list, threshold=None, event_rate=None)
         if close_rate is not None:
             result['close_rate'] = close_rate
         results.append(result)
-    return results
+    nri = net_reclassification_improvement(y_list[0], pred_orig, pred_improved)
+    print(nri)
+    return results, nri
+
+
+def net_reclassification_improvement(y_list, y_orig, y_improved):
+    nri_ret = {'e': {'+': 0, '-': 0, '=': 0, 'orig': sum(y_orig)}, 'ne': {'+': 0, '-': 0, '=': 0, 'orig': len(y_orig) - sum(y_orig)}}
+    for idx in range(len(y_list)):
+        yi = y_improved[idx]
+        yo = y_orig[idx]
+        if y_list[idx] == 0:
+            if yi > yo:
+                nri_ret['ne']['-'] += 1
+            elif yi < yo:
+                nri_ret['ne']['+'] += 1
+            else:
+                nri_ret['ne']['='] += 1
+        else:
+            if yi > yo:
+                nri_ret['e']['+'] += 1
+            elif yi < yo:
+                nri_ret['e']['-'] += 1
+            else:
+                nri_ret['e']['='] += 1
+    nri_ret['NRI_e'] = (nri_ret['e']['+'] - nri_ret['e']['-'])/nri_ret['e']['orig']
+    nri_ret['NRI_ne'] = (nri_ret['ne']['+'] - nri_ret['ne']['-'])/nri_ret['ne']['orig']
+    return nri_ret
 
 
 def get_confidence_interval(results, alpha=0.95):
@@ -182,33 +214,41 @@ def evaluate_pipeline(y_list, predicted_probs_list, model_names=None, threshold=
 
     auc_cis = [get_confidence_interval(auc_total_results[:, c]) for c in range(auc_total_results.shape[1])]
 
+    idx_to_compare = 0
     if figs:
-        auc_roc_analysis(y_list, predicted_probs_list,
-                         gen_fig=figs,
-                         labels=
-                         [model_name if model_name is not None else ''
-                          for model_name in model_names],
-                         fig_title=outcome,
-                         output_file=auc_fig_file,
-                         cis=auc_cis
-                         )
+        results = auc_roc_analysis(y_list, predicted_probs_list,
+                                   gen_fig=figs,
+                                   labels=
+                                   [model_name if model_name is not None else ''
+                                    for model_name in model_names],
+                                   fig_title=outcome,
+                                   output_file=auc_fig_file,
+                                   cis=auc_cis
+                                   )
+        idx_ret = [(idx, results[idx]) for idx in range(len(results) - 1)]
+        idx_ret = sorted(idx_ret, key=lambda x: - x[1])
+        idx_to_compare = idx_ret[0][0]
 
     result = {
               'c-index': ['{:.3f} ({:.2f}-{:.2f})'.format(auc_cis[idx][2], auc_cis[idx][0], auc_cis[idx][1])
                           for idx in range(len(auc_cis))],
               'calibration': get_dict_results(cal_results)
               }
+    nri_result = None
     if event_rate is not None:
-        result['clinical_usefulness (threshold %s)' % threshold] = \
-            clinical_usefulness(y_list, predicted_probs_list, threshold=threshold, event_rate=event_rate)
+        result['clinical_usefulness (threshold %s)' % threshold], nri_result = \
+            clinical_usefulness(y_list, predicted_probs_list, threshold=threshold, event_rate=event_rate,
+                                idx_to_compare=idx_to_compare)
     elif threshold is None or not list == type(threshold):
-        result['clinical_usefulness (threshold %s)' % threshold] = \
-            clinical_usefulness(y_list, predicted_probs_list, threshold=threshold)
+        result['clinical_usefulness (threshold %s)' % threshold], nri_result = \
+            clinical_usefulness(y_list, predicted_probs_list, threshold=threshold,
+                                idx_to_compare=idx_to_compare)
     else:
         for th in threshold:
-            result['clinical_usefulness (threshold %s)' % th] = \
-                clinical_usefulness(y_list, predicted_probs_list, threshold=th)
-    return result
+            result['clinical_usefulness (threshold %s)' % th], nri_result = \
+                clinical_usefulness(y_list, predicted_probs_list, threshold=th,
+                                    idx_to_compare=idx_to_compare)
+    return result, nri_result
 
 
 def format_result(model2result):

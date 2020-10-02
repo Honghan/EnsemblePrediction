@@ -77,7 +77,7 @@ def test_single_model(model, x, outcome=None, threshold=0.5):
 
 def test_models_and_ensemble(model_files, x, weights=None, outcome='death', threshold=0.5, result_csv=None,
                              severity_conf=None, generate_figs=False, auc_fig_file=None,
-                             calibration_fig_file=None, event_rate=None):
+                             calibration_fig_file=None, event_rate=None, nri_json=None):
     """
     do tests on individual models and also ensemble methods
     :param event_rate:
@@ -114,7 +114,7 @@ def test_models_and_ensemble(model_files, x, weights=None, outcome='death', thre
                             generate_figs=generate_figs)
     y_list.append(y)
     predicted_list.append(pred)
-    results = eval.evaluate_pipeline(y_list, predicted_list, model_names=[m.id for m in models] + ['ensemble model'],
+    results, nri_result = eval.evaluate_pipeline(y_list, predicted_list, model_names=[m.id for m in models] + ['ensemble model'],
                                      threshold=threshold,
                                      figs=generate_figs, outcome=outcome, auc_fig_file=auc_fig_file,
                                      calibration_fig_file=calibration_fig_file,
@@ -127,6 +127,8 @@ def test_models_and_ensemble(model_files, x, weights=None, outcome='death', thre
     result_df = eval.format_result(data)
     if result_csv is not None:
         result_df.to_csv(result_csv, sep='\t', index=False)
+    if nri_json is not None:
+        utils.save_json_array(nri_result, nri_json)
 
 
 def populate_col_by_or(x, cols, new_col_name):
@@ -179,7 +181,8 @@ def do_test(config_file):
                                  else (config['auc_fig_file_pattern'] % outcome),
                                  calibration_fig_file=None if 'calibration_fig_file_pattern' not in config
                                  else (config['calibration_fig_file_pattern'] % outcome),
-                                 event_rate=None if 'event_rate' not in config else config['event_rate']
+                                 event_rate=None if 'event_rate' not in config else config['event_rate'],
+                                 nri_json=None if 'nri_json' not in config else config['nri_json']
                                  )
         logging.info('result saved to {0}'.format(result_file))
 
@@ -231,7 +234,11 @@ def summarise_models(models, conf):
             data[m.id].append(' ')
             for v in sect['variables']:
                 if v in m.model_data['cohort_variable_distribution']:
-                    data[m.id].append('x')
+                    vd = m.model_data['cohort_variable_distribution'][v]
+                    if 'median' in vd:
+                        data[m.id].append('%s [%s, %s]' % (vd['median'], vd['l25'], vd['h25']))
+                    else:
+                        data[m.id].append('x')
                 else:
                     data[m.id].append(' ')
     df = pd.DataFrame(data)
@@ -241,6 +248,6 @@ def summarise_models(models, conf):
 
 if __name__ == "__main__":
     utils.setup_basic_logging(log_level='INFO', file='ensemble.log')
-    do_test('./test/test_config_kl-wuhan.json')
+    # do_test('./test/test_config_kl-wuhan.json')
     do_test('./test/test_config.json')
     # get_all_variables_from_models('./models', utils.load_json_data('./test/model_sum_conf.json'))
