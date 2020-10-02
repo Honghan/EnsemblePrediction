@@ -1,5 +1,5 @@
 # Ensemble Learning for COVID-19 Risk Prediction
-- implemented 7 prognosis risk prediction models for COVID-19
+- implemented [7 prognosis risk prediction models](https://github.com/Honghan/EnsemblePrediction/blob/master/models/model_sum.md) for COVID-19. *[Detailed tables in PDF](https://www.researchgate.net/profile/Honghan_Wu/publication/344250269_supplementary_tablespdf/data/5f60a58492851c0789679779/supplementary-tables.pdf)*
 - introduced a competence quantification framework for assessing the competence/confidence of a model in predicting a given data entry (i.e. a digital representation of a covid patient)
 - ensembled 7 prediction models for prediction using fusion strategies based on their competences
 - evaluated single models and the ensembled mode on two large COVID-19 cohorts from Wuhan, China (N=2,384) and King's College Hospital (N=1,475)
