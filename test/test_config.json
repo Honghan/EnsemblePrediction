@@ -35,5 +35,6 @@
   "result_tsv_folder": "./test",
   "generate_figs": true,
   "auc_fig_file_pattern": "./test/auc_fig_%s.png",
-  "calibration_fig_file_pattern": "./test/calibration_fig_%s.png"
+  "calibration_fig_file_pattern": "./test/calibration_fig_%s.png",
+  "nri_json": "./test/nri.json"
 }
