@@ -230,6 +230,8 @@ def evaluate_pipeline(y_list, predicted_probs_list, model_names=None, threshold=
         idx_to_compare = idx_ret[0][0]
         carlibration_analysis(y_list, predicted_probs_list,
                               gen_fig=figs,
+                              labels=[model_name if model_name is not None else ''
+                                      for model_name in model_names],
                               output_file=calibration_fig_file)
 
     result = {
