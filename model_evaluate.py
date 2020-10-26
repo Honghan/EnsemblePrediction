@@ -228,6 +228,9 @@ def evaluate_pipeline(y_list, predicted_probs_list, model_names=None, threshold=
         idx_ret = [(idx, results[idx]) for idx in range(len(results) - 1)]
         idx_ret = sorted(idx_ret, key=lambda x: - x[1])
         idx_to_compare = idx_ret[0][0]
+        carlibration_analysis(y_list, predicted_probs_list,
+                              gen_fig=figs,
+                              output_file=calibration_fig_file)
 
     result = {
               'c-index': ['{:.3f} ({:.2f}-{:.2f})'.format(auc_cis[idx][2], auc_cis[idx][0], auc_cis[idx][1])
